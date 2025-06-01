@@ -1,0 +1,18 @@
+---
+description: This is the project's technical stack
+globs: 
+alwaysApply: false
+---
+# Technical Stack
+
+1. Container & Orchestration: Kubernetes ≥ 1.28, Helm v3
+2. Runtime Images: Docker (Alpine / slim)
+3. Backend / API: Python 3.11, FastAPI 0.111 (async), SQLAlchemy 2.0, Pydantic v2
+4. Realtime & RPC: WebSocket (Starlette), gRPC with grpclib
+5. Authentication & Authorization: HMAC API keys, OAuth 2.1 Device-Code (Auth0), PostgreSQL Row-Level Security, custom RBAC table (viewer / editor / owner / admin)
+6. Collaboration Engine: automerge-py (JSON diff CRDT)
+7. Search / AI: FAISS 1.8 (tenant-scoped vector index)
+8. Data Stores: PostgreSQL 15 (notes, users, invoices, quotas); Redis 7 (Pub/Sub + Lua token-bucket rate limiting)
+9. Worker / Billing: Python worker pod; Kubernetes CronJob for nightly usage roll-up → JSON invoices
+10. Frontend & SDKs: TypeScript 5, React 18 (Vite) for RBAC admin UI, OpenAPI-generated TypeScript Fetch SDK
+11. Testing & Dev Tools: pytest-asyncio, ruff + pre-commit hooks, kind / minikube for local K8s testing

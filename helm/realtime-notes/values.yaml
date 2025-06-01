@@ -1,0 +1,106 @@
+# Default values for realtime-notes
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: realtime-notes-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+  grpcPort: 50051
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Application specific configuration
+config:
+  environment: production
+  debug: false
+  enableGrpc: true
+
+  # Auth0 configuration
+  auth0:
+    domain: notes-dev.auth0.com
+    audience: https://api.notes.example.com
+    # clientId and clientSecret should be provided via --set-file or secrets
+
+# Database configuration
+postgresql:
+  enabled: true
+  postgresqlUsername: postgres
+  postgresqlPassword: postgres
+  postgresqlDatabase: notes
+  persistence:
+    enabled: true
+    size: 1Gi
+
+# Redis configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: redis
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi
+
+# Billing worker configuration
+billingWorker:
+  enabled: true
+  schedule: "0 0 * * *" # Run at midnight every day
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

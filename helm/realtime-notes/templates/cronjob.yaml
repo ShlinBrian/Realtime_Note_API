@@ -1,0 +1,28 @@
+{{- if .Values.billingWorker.enabled -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "realtime-notes.fullname" . }}-billing-worker
+  labels:
+    {{- include "realtime-notes.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.billingWorker.schedule | quote }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: billing-worker
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command: ["python", "-m", "api.billing.worker"]
+            env:
+              - name: DATABASE_URL
+                value: postgresql://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@{{ include "realtime-notes.fullname" . }}-postgresql/{{ .Values.postgresql.postgresqlDatabase }}
+              - name: ENVIRONMENT
+                value: {{ .Values.config.environment }}
+            resources:
+              {{- toYaml .Values.billingWorker.resources | nindent 14 }}
+          restartPolicy: OnFailure
+{{- end }} 

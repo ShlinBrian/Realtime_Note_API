@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package notes;
+
+service NoteService {
+  // Get a note by ID
+  rpc GetNote (GetNoteRequest) returns (Note) {}
+  
+  // Search for notes
+  rpc Search (SearchRequest) returns (SearchResponse) {}
+  
+  // Bidirectional streaming for real-time editing
+  rpc Edit (stream EditEvent) returns (stream EditEvent) {}
+}
+
+// Note request
+message GetNoteRequest {
+  string org_id = 1;
+  string note_id = 2;
+}
+
+// Note model
+message Note {
+  string note_id = 1;
+  string title = 2;
+  string content_md = 3;
+  int64 version = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+// Search request
+message SearchRequest {
+  string org_id = 1;
+  string query = 2;
+  int32 top_k = 3;
+}
+
+// Search result
+message SearchResult {
+  string note_id = 1;
+  float score = 2;
+}
+
+// Search response
+message SearchResponse {
+  repeated SearchResult results = 1;
+}
+
+// Edit event for real-time collaboration
+message EditEvent {
+  string note_id = 1;
+  bytes patch = 2;  // JSON patch for jsonmerge
+  int64 version = 3;
+}
+
+// Error response
+message ErrorResponse {
+  string code = 1;
+  string message = 2;
+} 
