@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"  # REST API
+      - "50051:50051"  # gRPC
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres/notes
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - HOST=0.0.0.0
+      - PORT=8000
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=50051
+      - ENVIRONMENT=development
+      - DEBUG=true
+    volumes:
+      - ./indices:/app/indices
+      - ./:/app  # Mount the current directory for development
+    depends_on:
+      - postgres
+      - redis
+      - setup
+    restart: unless-stopped
+
+  setup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python scripts/init_local.py
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres/notes
+    volumes:
+      - ./:/app  # Mount the current directory for development
+    depends_on:
+      - postgres
+    restart: "no"  # Run once and exit
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=notes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    command: redis-server --requirepass redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data: 
