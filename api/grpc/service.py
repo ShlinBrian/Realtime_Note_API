@@ -12,11 +12,10 @@ import jsonmerge
 from api.grpc.generated import notes_pb2, notes_pb2_grpc
 
 # Import models and services
-from api.db.database import get_async_db, set_tenant_context
+from api.db.database import get_async_db
 from api.models.models import Note, User, ApiKey, UserRole
 from api.search.vector_search import search_notes
 from api.auth.auth import hash_api_key
-from api.billing.usage import log_usage
 
 
 class NoteServiceServicer(notes_pb2_grpc.NoteServiceServicer):
@@ -73,9 +72,6 @@ class NoteServiceServicer(notes_pb2_grpc.NoteServiceServicer):
                     grpc.StatusCode.INTERNAL, "Organization has no owner"
                 )
 
-            # Set tenant context for RLS
-            await set_tenant_context(db, db_api_key.org_id)
-
             return user, db_api_key.org_id
 
         # Check for JWT token
@@ -96,9 +92,6 @@ class NoteServiceServicer(notes_pb2_grpc.NoteServiceServicer):
             # Get database session
             db = next(self.db_getter())
 
-            # Set tenant context for RLS
-            await set_tenant_context(db, org_id)
-
             # Get note
             result = await db.execute(
                 select(Note).where(
@@ -112,16 +105,6 @@ class NoteServiceServicer(notes_pb2_grpc.NoteServiceServicer):
                     grpc.StatusCode.NOT_FOUND,
                     f"Note with ID {request.note_id} not found",
                 )
-
-            # Log usage
-            await log_usage(
-                org_id=org_id,
-                user_id=user.user_id,
-                kind="gRPC",
-                endpoint="GetNote",
-                bytes_count=len(note.content_md),
-                db=db,
-            )
 
             # Convert to gRPC response
             return notes_pb2.Note(
@@ -145,22 +128,9 @@ class NoteServiceServicer(notes_pb2_grpc.NoteServiceServicer):
             # Get database session
             db = next(self.db_getter())
 
-            # Set tenant context for RLS
-            await set_tenant_context(db, org_id)
-
             # Search for notes
             results = await search_notes(
                 query=request.query, org_id=org_id, top_k=request.top_k, db=db
-            )
-
-            # Log usage
-            await log_usage(
-                org_id=org_id,
-                user_id=user.user_id,
-                kind="gRPC",
-                endpoint="Search",
-                bytes_count=len(request.query),
-                db=db,
             )
 
             # Convert to gRPC response
@@ -211,7 +181,6 @@ class NoteServiceServicer(notes_pb2_grpc.NoteServiceServicer):
                     note_id = request.note_id
 
                     # Check if note exists
-                    await set_tenant_context(db, org_id)
                     result = await db.execute(
                         select(Note).where(
                             Note.note_id == note_id, Note.deleted == False
@@ -257,17 +226,6 @@ class NoteServiceServicer(notes_pb2_grpc.NoteServiceServicer):
                     note.version = request.version
                     db.add(note)
                     await db.commit()
-
-                # Log usage
-                patch_bytes = len(request.patch)
-                await log_usage(
-                    org_id=org_id,
-                    user_id=user.user_id,
-                    kind="gRPC",
-                    endpoint="Edit",
-                    bytes_count=patch_bytes,
-                    db=db,
-                )
 
                 # Broadcast to other connections
                 if note_id in self.edit_connections:

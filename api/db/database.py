@@ -38,9 +38,3 @@ def get_db() -> Generator:
 async def get_async_db() -> AsyncGenerator:
     async with AsyncSessionLocal() as session:
         yield session
-
-
-# Set RLS policy for tenant isolation
-async def set_tenant_context(db: AsyncSession, org_id: str) -> None:
-    """Set PostgreSQL session context for Row-Level Security"""
-    await db.execute(text(f"SET app.org_id = '{org_id}'"))

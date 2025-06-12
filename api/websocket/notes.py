@@ -10,12 +10,9 @@ import asyncio
 import time
 import jsonmerge
 
-from api.db.database import get_async_db, set_tenant_context
-from api.models.models import Note, User
+from api.db.database import get_async_db
+from api.models.models import Note
 from api.models.schemas import WebSocketPatch
-from api.auth.auth import get_current_user_from_token, get_current_user_from_api_key
-from api.auth.rate_limit import RateLimiter, DEFAULT_BYTES_PER_MINUTE
-from api.billing.usage import log_usage
 
 # Redis connection for pub/sub
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -26,7 +23,6 @@ class NoteConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, List[WebSocket]] = {}
         self.connection_details: Dict[WebSocket, Dict[str, Any]] = {}
-        self.rate_limiter = RateLimiter()
         self.merger = jsonmerge.Merger(
             # Schema for the merge operation
             {
@@ -37,9 +33,7 @@ class NoteConnectionManager:
             }
         )
 
-    async def connect(
-        self, websocket: WebSocket, note_id: str, user: User, org_id: str
-    ) -> None:
+    async def connect(self, websocket: WebSocket, note_id: str) -> None:
         """Connect a WebSocket client to a note"""
         await websocket.accept()
 
@@ -49,15 +43,13 @@ class NoteConnectionManager:
         self.active_connections[note_id].append(websocket)
         self.connection_details[websocket] = {
             "note_id": note_id,
-            "user_id": user.user_id if user else None,
-            "org_id": org_id,
             "connected_at": time.time(),
             "bytes_sent": 0,
             "bytes_received": 0,
         }
 
         # Subscribe to Redis channel for this note
-        asyncio.create_task(self._subscribe_to_note(websocket, note_id, org_id))
+        asyncio.create_task(self._subscribe_to_note(websocket, note_id))
 
     async def disconnect(self, websocket: WebSocket) -> None:
         """Disconnect a WebSocket client"""
@@ -84,9 +76,7 @@ class NoteConnectionManager:
         # Publish to Redis channel
         redis_client.publish(f"note:{note_id}", json.dumps(message))
 
-    async def _subscribe_to_note(
-        self, websocket: WebSocket, note_id: str, org_id: str
-    ) -> None:
+    async def _subscribe_to_note(self, websocket: WebSocket, note_id: str) -> None:
         """Subscribe to Redis channel for a note"""
         pubsub = redis_client.pubsub()
         pubsub.subscribe(f"note:{note_id}")
@@ -109,25 +99,15 @@ class NoteConnectionManager:
     async def _send_message(
         self, websocket: WebSocket, message: Dict[str, Any]
     ) -> None:
-        """Send a message to a WebSocket client with rate limiting"""
+        """Send a message to a WebSocket client"""
         if websocket not in self.connection_details:
             return
 
         details = self.connection_details[websocket]
-        org_id = details["org_id"]
 
         # Convert message to string and calculate bytes
         message_str = json.dumps(message)
         bytes_count = len(message_str.encode("utf-8"))
-
-        # Check rate limit
-        allowed = await self.rate_limiter.check_rate_limit(
-            org_id=org_id, kind="WS", bytes_count=bytes_count
-        )
-
-        if not allowed:
-            await websocket.close(code=4008, reason="Rate limit exceeded")
-            return
 
         # Update bytes count
         details["bytes_sent"] += bytes_count
@@ -156,11 +136,8 @@ class NoteConnectionManager:
 manager = NoteConnectionManager()
 
 
-async def get_note_if_exists(note_id: str, db: AsyncSession, org_id: str) -> Note:
-    """Get a note if it exists and belongs to the organization"""
-    # Set tenant context for RLS
-    await set_tenant_context(db, org_id)
-
+async def get_note_if_exists(note_id: str, db: AsyncSession) -> Note:
+    """Get a note if it exists"""
     result = await db.execute(
         select(Note).where(Note.note_id == note_id, Note.deleted == False)
     )
@@ -178,99 +155,112 @@ async def get_note_if_exists(note_id: str, db: AsyncSession, org_id: str) -> Not
 async def handle_websocket_connection(
     websocket: WebSocket,
     note_id: str,
-    token: Optional[str] = None,
-    api_key: Optional[str] = None,
     db: AsyncSession = Depends(get_async_db),
 ):
     """Handle WebSocket connection for real-time note editing"""
-    user = None
-    org_id = None
-
-    # Authenticate user
     try:
-        if token:
-            user, org_id = await get_current_user_from_token(token, db)
-        elif api_key:
-            user, org_id = await get_current_user_from_api_key(api_key, db)
-        else:
-            await websocket.close(code=1008, reason="Authentication required")
-            return
-    except HTTPException:
-        await websocket.close(code=1008, reason="Authentication failed")
-        return
+        # Get the note
+        note = await get_note_if_exists(note_id, db)
 
-    # Check if note exists
-    try:
-        note = await get_note_if_exists(note_id, db, org_id)
-    except HTTPException as e:
-        await websocket.close(code=1008, reason=str(e.detail))
-        return
+        # Connect to the WebSocket
+        await manager.connect(websocket, note_id)
 
-    # Connect to WebSocket
-    await manager.connect(websocket, note_id, user, org_id)
+        # Send initial note state
+        await websocket.send_json(
+            {
+                "type": "init",
+                "data": {
+                    "note_id": note.note_id,
+                    "title": note.title,
+                    "content_md": note.content_md,
+                    "version": note.version,
+                },
+            }
+        )
 
-    try:
-        # Process messages
+        # Handle incoming messages
         while True:
-            # Receive message
-            data = await websocket.receive_text()
-
-            # Parse message
             try:
-                message_data = json.loads(data)
-                patch = WebSocketPatch(**message_data)
-            except (json.JSONDecodeError, ValueError):
-                await websocket.send_json({"error": "Invalid message format"})
-                continue
+                # Receive JSON message
+                message = await websocket.receive_json()
 
-            # Calculate bytes
-            bytes_count = len(data.encode("utf-8"))
+                # Handle patch
+                if message.get("type") == "patch":
+                    patch_data = WebSocketPatch(**message.get("data", {}))
 
-            # Check rate limit
-            allowed = await manager.rate_limiter.check_rate_limit(
-                org_id=org_id, kind="WS", bytes_count=bytes_count
+                    # Get current note state
+                    note = await get_note_if_exists(note_id, db)
+
+                    # Check version
+                    if patch_data.version != note.version:
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "data": {
+                                    "code": "VERSION_MISMATCH",
+                                    "message": "Note version mismatch",
+                                    "current_version": note.version,
+                                },
+                            }
+                        )
+                        continue
+
+                    # Apply patch
+                    note_content = {"title": note.title, "content_md": note.content_md}
+                    updated_content = await manager.apply_patch(
+                        note_content, patch_data.patch
+                    )
+
+                    # Update note in database
+                    note.title = updated_content.get("title", note.title)
+                    note.content_md = updated_content.get("content_md", note.content_md)
+                    note.version += 1
+
+                    db.add(note)
+                    await db.commit()
+
+                    # Broadcast update to all clients
+                    await manager.broadcast_to_note(
+                        note_id,
+                        {
+                            "type": "update",
+                            "data": {
+                                "title": note.title,
+                                "content_md": note.content_md,
+                                "version": note.version,
+                            },
+                        },
+                    )
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                # Send error to client
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "data": {
+                            "code": "INTERNAL_ERROR",
+                            "message": str(e),
+                        },
+                    }
+                )
+    except HTTPException as e:
+        # Send error and close
+        if websocket.client_state.name == "CONNECTED":
+            await websocket.send_json(
+                {
+                    "type": "error",
+                    "data": {
+                        "code": str(e.status_code),
+                        "message": e.detail,
+                    },
+                }
             )
-
-            if not allowed:
-                await websocket.close(code=4008, reason="Rate limit exceeded")
-                return
-
-            # Get current note content
-            note_content = {"title": note.title, "content_md": note.content_md}
-
-            # Apply patch to note content
-            updated_content = await manager.apply_patch(note_content, patch.patch)
-
-            # Update note in database
-            note.title = updated_content.get("title", note.title)
-            note.content_md = updated_content.get("content_md", note.content_md)
-            note.version = patch.version
-            db.add(note)
-            await db.commit()
-
-            # Broadcast to other clients
-            await manager.broadcast_to_note(
-                note_id=note_id,
-                message={"patch": patch.patch, "version": patch.version},
-                exclude=websocket,
-            )
-
-            # Log usage
-            connection_details = manager.connection_details.get(websocket, {})
-            connection_details["bytes_received"] = (
-                connection_details.get("bytes_received", 0) + bytes_count
-            )
-
-            await log_usage(
-                org_id=org_id,
-                user_id=user.user_id if user else None,
-                kind="WS",
-                endpoint=f"/ws/notes/{note_id}",
-                bytes_count=bytes_count,
-                db=db,
-            )
-
-    except WebSocketDisconnect:
-        await manager.disconnect(websocket)
-    except Exception:
+            await websocket.close(code=e.status_code)
+    except Exception as e:
+        # Handle unexpected errors
+        if websocket.client_state.name == "CONNECTED":
+            await websocket.close(code=1011, reason="Internal server error")
+    finally:
+        # Disconnect WebSocket
         await manager.disconnect(websocket)

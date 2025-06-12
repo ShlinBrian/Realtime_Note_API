@@ -11,7 +11,6 @@ from typing import List, Dict, Any
 from api.routers import notes, search, admin, api_keys, auth
 from api.websocket.notes import handle_websocket_connection
 from api.grpc.service import serve as serve_grpc
-from api.billing.usage import UsageMiddleware
 from api.models.schemas import ErrorResponse
 
 # Configure logging
@@ -33,9 +32,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Add usage middleware
-app.add_middleware(UsageMiddleware)
 
 # Include routers
 app.include_router(notes.router)
@@ -84,15 +80,7 @@ def custom_openapi():
         routes=app.routes,
     )
 
-    # Add security schemes
-    openapi_schema["components"]["securitySchemes"] = {
-        "ApiKeyAuth": {"type": "apiKey", "in": "header", "name": "x-api-key"},
-        "BearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
-    }
-
-    # Apply security globally
-    openapi_schema["security"] = [{"ApiKeyAuth": []}, {"BearerAuth": []}]
-
+    # No security schemes needed anymore
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

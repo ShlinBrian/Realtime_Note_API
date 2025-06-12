@@ -11,7 +11,7 @@ import secrets
 import os
 from typing import Optional, Tuple
 
-from api.db.database import get_async_db, set_tenant_context
+from api.db.database import get_async_db
 from api.models.models import User, ApiKey, UserRole, Organization
 from api.models.schemas import TokenData, UserRole as SchemaUserRole
 
@@ -90,9 +90,6 @@ async def get_current_user_from_token(
     if user is None:
         raise credentials_exception
 
-    # Set tenant context for RLS
-    await set_tenant_context(db, user.org_id)
-
     return user, user.org_id
 
 
@@ -120,9 +117,6 @@ async def get_current_user_from_api_key(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API key has expired",
         )
-
-    # Set tenant context for RLS
-    await set_tenant_context(db, db_api_key.org_id)
 
     # Get the organization's owner as the default user
     result = await db.execute(

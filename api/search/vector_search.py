@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from api.models.models import Note
-from api.db.database import set_tenant_context
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -261,28 +260,38 @@ async def search_notes(
     return results
 
 
-async def rebuild_index_for_org(org_id: str, db: AsyncSession) -> None:
+async def rebuild_index_for_org(org_id: str, db: AsyncSession) -> int:
     """Rebuild the search index for an organization"""
-    # Set tenant context for RLS
-    await set_tenant_context(db, org_id)
-
-    # Query all non-deleted notes
+    # Get all notes for the org
     result = await db.execute(
         select(Note).where(Note.org_id == org_id, Note.deleted == False)
     )
     notes = result.scalars().all()
 
-    # Create new index
-    index = NoteVectorIndex(org_id)
+    # Get or create index
+    index = get_index_for_org(org_id)
+
+    # Clear existing index
+    index.note_ids = []
+    index.embeddings = []
+    if FAISS_AVAILABLE:
+        index.index = faiss.IndexFlatL2(index.dimension)
 
     # Add notes to index
+    count = 0
     for note in notes:
-        text = f"{note.title}\n\n{note.content_md}"
-        embedding = text_to_embedding(text)
-        index.add_note(note.note_id, embedding)
+        try:
+            # Generate embedding
+            content = f"{note.title}\n\n{note.content_md}"
+            embedding = text_to_embedding(content)
 
-    # Update registry
-    with registry_lock:
-        index_registry[org_id] = index
+            # Add to index
+            index.add_note(note.note_id, embedding)
+            count += 1
+        except Exception as e:
+            logger.error(f"Error indexing note {note.note_id}: {e}")
 
-    return len(notes)
+    # Save index
+    index._save_index()
+
+    return count

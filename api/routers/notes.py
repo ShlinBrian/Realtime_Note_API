@@ -1,42 +1,31 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import List, Optional, Tuple
-import time
+from typing import List, Optional
 
-from api.db.database import get_async_db, set_tenant_context
-from api.models.models import Note, User
+from api.db.database import get_async_db
+from api.models.models import Note
 from api.models.schemas import (
     NoteCreate,
     NotePatch,
     NoteResponse,
     NoteDeleteResponse,
-    UserRole,
 )
-from api.auth.auth import get_current_active_user, get_user_with_permission
-from api.auth.rate_limit import check_rate_limit
 from api.search.vector_search import index_note, remove_note_from_index
 
-router = APIRouter(
-    prefix="/v1/notes", tags=["notes"], dependencies=[Depends(check_rate_limit)]
-)
+router = APIRouter(prefix="/v1/notes", tags=["notes"])
 
 
 @router.post("", response_model=str, status_code=status.HTTP_201_CREATED)
 async def create_note(
     note: NoteCreate,
-    current_user: Tuple[User, str] = Depends(get_user_with_permission(UserRole.EDITOR)),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
     Create a new note
-
-    Requires editor role or higher
     """
-    user, org_id = current_user
-
-    # Set tenant context for RLS
-    await set_tenant_context(db, org_id)
+    # Create note with a default org_id
+    org_id = "default"
 
     # Create note
     db_note = Note(
@@ -58,19 +47,11 @@ async def get_note(
     note_id: str,
     request: Request,
     response: Response,
-    current_user: Tuple[User, str] = Depends(get_user_with_permission(UserRole.VIEWER)),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
     Get a note by ID
-
-    Requires viewer role or higher
     """
-    user, org_id = current_user
-
-    # Set tenant context for RLS
-    await set_tenant_context(db, org_id)
-
     # Get note
     result = await db.execute(
         select(Note).where(Note.note_id == note_id, Note.deleted == False)
@@ -99,19 +80,11 @@ async def get_note(
 async def update_note(
     note_id: str,
     note_update: NotePatch,
-    current_user: Tuple[User, str] = Depends(get_user_with_permission(UserRole.EDITOR)),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
     Update a note
-
-    Requires editor role or higher
     """
-    user, org_id = current_user
-
-    # Set tenant context for RLS
-    await set_tenant_context(db, org_id)
-
     # Get note
     result = await db.execute(
         select(Note).where(Note.note_id == note_id, Note.deleted == False)
@@ -153,19 +126,11 @@ async def update_note(
 @router.delete("/{note_id}", response_model=NoteDeleteResponse)
 async def delete_note(
     note_id: str,
-    current_user: Tuple[User, str] = Depends(get_user_with_permission(UserRole.OWNER)),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
     Delete a note
-
-    Requires owner role or higher
     """
-    user, org_id = current_user
-
-    # Set tenant context for RLS
-    await set_tenant_context(db, org_id)
-
     # Get note
     result = await db.execute(
         select(Note).where(Note.note_id == note_id, Note.deleted == False)
@@ -193,23 +158,15 @@ async def delete_note(
 async def list_notes(
     skip: int = 0,
     limit: int = 100,
-    current_user: Tuple[User, str] = Depends(get_user_with_permission(UserRole.VIEWER)),
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-    List all notes for the organization
-
-    Requires viewer role or higher
+    List all notes
     """
-    user, org_id = current_user
-
-    # Set tenant context for RLS
-    await set_tenant_context(db, org_id)
-
     # Get notes
     result = await db.execute(
         select(Note)
-        .where(Note.org_id == org_id, Note.deleted == False)
+        .where(Note.deleted == False)
         .offset(skip)
         .limit(limit)
         .order_by(Note.updated_at.desc())
