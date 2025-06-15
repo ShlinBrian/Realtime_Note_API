@@ -20,8 +20,87 @@ logger = logging.getLogger(__name__)
 # Create FastAPI app
 app = FastAPI(
     title="Realtime Notes API",
-    description="A Kubernetes-native service that delivers real-time, multi-user Markdown note editing plus semantic AI search as a turnkey backend component.",
+    description="""
+A Kubernetes-native service that delivers real-time, multi-user Markdown note editing plus semantic AI search as a turnkey backend component.
+
+## Features
+
+- **Real-time CRDT Collaboration** via WebSocket
+- **CRUD & Versioned Notes** with Markdown support  
+- **Vector Search (FAISS)** scoped to tenant
+- **Multiple API Surfaces**: REST, gRPC, and WebSocket
+- **Authentication** with API Keys and OAuth 2.1
+- **RBAC** with row-level isolation
+- **Rate Limiting & Quotas**
+- **Usage Metering & Billing**
+
+## Quick Start
+
+1. **Create an API Key**: `POST /v1/api-keys`
+2. **Create a Note**: `POST /v1/notes` 
+3. **Search Notes**: `POST /v1/search`
+4. **Real-time Editing**: Connect to `WebSocket /ws/notes/{note_id}`
+
+## Authentication
+
+Use one of these methods:
+
+- **API Key**: Include `x-api-key: your_key` header
+- **Bearer Token**: Include `Authorization: Bearer your_token` header
+
+## WebSocket API
+
+For real-time collaboration, connect to:
+```
+WebSocket: /ws/notes/{note_id}
+```
+
+Send JSON patches for collaborative editing with automatic conflict resolution.
+
+## Rate Limits
+
+- **REST API**: 1000 requests/minute per organization
+- **WebSocket**: 100 messages/minute per connection
+- **Search**: 100 queries/minute per organization
+
+See the `/docs` endpoint for complete API documentation.
+""",
     version="1.0.0",
+    contact={
+        "name": "Realtime Notes API Support",
+        "url": "https://github.com/ShlinBrian/Realtime_Note_API",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    servers=[
+        {"url": "http://localhost:8000", "description": "Development server"},
+        {"url": "https://api.example.com", "description": "Production server"},
+    ],
+    tags_metadata=[
+        {
+            "name": "notes",
+            "description": "CRUD operations for Markdown notes with versioning and search indexing.",
+        },
+        {
+            "name": "search",
+            "description": "Semantic vector search across notes using FAISS for high-performance similarity matching.",
+        },
+        {
+            "name": "api-keys",
+            "description": "Manage API keys for authentication. Keys are shown only once upon creation.",
+        },
+        {
+            "name": "auth",
+            "description": "Authentication endpoints including OAuth 2.1 Device Code flow and token management.",
+        },
+        {
+            "name": "admin",
+            "description": "Administrative operations including usage statistics, user management, and billing information.",
+        },
+    ],
 )
 
 # Add CORS middleware

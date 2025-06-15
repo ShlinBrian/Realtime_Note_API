@@ -221,7 +221,7 @@ def text_to_embedding(text: str) -> np.ndarray:
     """
     # Simple deterministic embedding generation for demo purposes
     # In production, use a proper embedding model
-    hash_value = hash(text)
+    hash_value = abs(hash(text)) % (2**32 - 1)  # Ensure positive value within range
     rng = np.random.RandomState(hash_value)
     embedding = rng.randn(384)  # 384-dimensional embedding
     return embedding / np.linalg.norm(embedding)  # Normalize
