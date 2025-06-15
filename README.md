@@ -13,6 +13,128 @@ A Kubernetes-native service that delivers real-time, multi-user Markdown note ed
 - Rate limiting & quotas
 - Usage metering & billing
 
+## Architecture Overview
+
+The Realtime Notes API is built as a modern, scalable microservice with multiple API interfaces and real-time collaboration capabilities.
+
+```mermaid
+graph TB
+    %% External Clients
+    Client[🖥️ Web Client]
+    Mobile[📱 Mobile App]
+    CLI[💻 CLI Tool]
+
+    %% API Gateway
+    Gateway[⚖️ Load Balancer<br/>Kubernetes Ingress]
+
+    %% API Layer
+    REST[🌐 REST API<br/>Port 8000<br/>FastAPI]
+    WS[🔌 WebSocket API<br/>Real-time Collaboration]
+    GRPC[⚡ gRPC API<br/>High Performance]
+
+    %% Auth & Security
+    Auth[🔐 Authentication<br/>API Keys & OAuth 2.1]
+    RateLimit[🚦 Rate Limiting<br/>Redis Token Bucket]
+
+    %% Core Services
+    Router[🎯 FastAPI Routers]
+    NotesService[📝 Notes Service<br/>CRUD & Versioning]
+    SearchService[🔍 Search Service<br/>Vector Embeddings]
+    CollabService[👥 Collaboration<br/>WebSocket Manager]
+
+    %% Data Storage
+    PostgresDB[(🐘 PostgreSQL<br/>Primary Database)]
+    Redis[(📦 Redis<br/>Pub/Sub & Caching)]
+    FAISS[(🧠 FAISS Index<br/>Vector Search)]
+
+    %% Infrastructure
+    Docker[🐳 Docker Compose<br/>Local Development]
+    K8s[☸️ Kubernetes<br/>Production Deployment]
+
+    %% Connections
+    Client --> Gateway
+    Mobile --> Gateway
+    CLI --> Gateway
+
+    Gateway --> REST
+    Gateway --> WS
+    Gateway --> GRPC
+
+    REST --> Auth
+    WS --> Auth
+    GRPC --> Auth
+
+    Auth --> RateLimit
+    RateLimit --> Router
+
+    Router --> NotesService
+    Router --> SearchService
+    Router --> CollabService
+
+    NotesService --> PostgresDB
+    SearchService --> FAISS
+    CollabService --> Redis
+
+    REST -.-> Docker
+    Docker -.-> K8s
+
+    %% Styling - Dark mode friendly colors
+    classDef client fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff
+    classDef api fill:#134e4a,stroke:#14b8a6,stroke-width:2px,color:#ffffff
+    classDef service fill:#365314,stroke:#84cc16,stroke-width:2px,color:#ffffff
+    classDef storage fill:#92400e,stroke:#f59e0b,stroke-width:2px,color:#ffffff
+    classDef infra fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#ffffff
+    classDef auth fill:#581c87,stroke:#a855f7,stroke-width:2px,color:#ffffff
+
+    class Client,Mobile,CLI client
+    class REST,WS,GRPC api
+    class NotesService,SearchService,CollabService service
+    class PostgresDB,Redis,FAISS storage
+    class Docker,K8s,Gateway infra
+    class Auth,RateLimit,Router auth
+```
+
+### Key Components
+
+| Component          | Purpose                          | Technology                |
+| ------------------ | -------------------------------- | ------------------------- |
+| **REST API**       | Standard HTTP CRUD operations    | FastAPI                   |
+| **WebSocket API**  | Real-time collaborative editing  | WebSocket + JSON Patch    |
+| **gRPC API**       | High-performance binary protocol | gRPC + Protocol Buffers   |
+| **Authentication** | API key & OAuth 2.1 auth         | JWT + Redis               |
+| **Rate Limiting**  | Per-organization quotas          | Redis token bucket        |
+| **Vector Search**  | Semantic similarity search       | FAISS + embeddings        |
+| **Real-time Sync** | Multi-user collaboration         | WebSocket + Redis pub/sub |
+| **Database**       | Primary data storage             | PostgreSQL                |
+| **Caching**        | Session & pub/sub                | Redis                     |
+
+### Data Flow Examples
+
+**Note Creation:**
+
+1. Client sends `POST /v1/notes` with API key
+2. Authentication validates key and gets organization
+3. Rate limiter checks request quotas
+4. Note is saved to PostgreSQL with versioning
+5. Content is vectorized and indexed in FAISS
+6. Response returned with note ID
+
+**Real-time Collaboration:**
+
+1. Multiple clients connect to `WebSocket /ws/notes/{id}`
+2. Client sends JSON patch with changes
+3. Server applies patch and updates PostgreSQL
+4. Change broadcast to all connected clients via Redis
+5. Clients receive and apply patches in real-time
+
+**Semantic Search:**
+
+1. Client sends search query to `POST /v1/search`
+2. Query text converted to vector embedding
+3. FAISS performs similarity search within organization
+4. Results ranked by semantic relevance score
+5. Note IDs returned with similarity scores
+
 ## Quick Start
 
 ### Prerequisites
@@ -186,7 +308,31 @@ The `run_local.sh` script provides several useful commands:
 
 ## Documentation
 
-API documentation is available at `/docs` when the service is running.
+- **📖 [Complete API Documentation](docs/api_documentation.md)** - Full REST, WebSocket, and gRPC API reference
+- **🏗️ [Architecture Deep Dive](docs/architecture_flowchart.md)** - Detailed system architecture with diagrams
+- **🔐 [Authentication Guide](docs/authentication_guide.md)** - API keys, OAuth 2.1, and security best practices
+- **🔌 [WebSocket API Guide](docs/websocket_api.md)** - Real-time collaboration and JSON patch operations
+- **🌐 [Interactive API Docs](http://localhost:8000/docs)** - Swagger UI (when running locally)
+
+### Quick Reference
+
+```bash
+# API Endpoints
+GET    /v1/notes           # List notes
+POST   /v1/notes           # Create note
+GET    /v1/notes/{id}      # Get note
+PUT    /v1/notes/{id}      # Update note
+DELETE /v1/notes/{id}      # Delete note
+POST   /v1/search          # Search notes
+
+# WebSocket
+WS     /ws/notes/{id}      # Real-time collaboration
+
+# Authentication
+POST   /v1/api-keys        # Create API key
+GET    /v1/api-keys        # List API keys
+DELETE /v1/api-keys/{id}   # Delete API key
+```
 
 ## License
 
