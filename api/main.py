@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi import FastAPI, Request, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
@@ -9,9 +9,7 @@ from typing import List, Dict, Any
 
 # Import routers
 from api.routers import notes, search, admin, api_keys, auth
-from api.websocket.notes import handle_websocket_connection
 from api.grpc.service import serve as serve_grpc
-from api.models.schemas import ErrorResponse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -119,8 +117,13 @@ app.include_router(admin.router)
 app.include_router(api_keys.router)
 app.include_router(auth.router)
 
+
 # Add WebSocket endpoint
-app.add_websocket_route("/ws/notes/{note_id}", handle_websocket_connection)
+@app.websocket("/ws/notes/{note_id}")
+async def websocket_endpoint(websocket: WebSocket, note_id: str):
+    from api.websocket.simple_notes import simple_websocket_handler
+
+    await simple_websocket_handler(websocket, note_id)
 
 
 # Custom exception handler for HTTPException

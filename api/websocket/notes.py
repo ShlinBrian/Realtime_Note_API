@@ -1,21 +1,21 @@
-from fastapi import WebSocket, WebSocketDisconnect, Depends, HTTPException, status
+from fastapi import WebSocket, WebSocketDisconnect, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 import json
 import base64
 import redis
 import os
-from typing import Dict, List, Set, Any, Optional
+from typing import Dict, List, Any, Optional
 import asyncio
 import time
 import jsonmerge
 
-from api.db.database import get_async_db
+from api.db.database import SessionLocal
 from api.models.models import Note
 from api.models.schemas import WebSocketPatch
 
 # Redis connection for pub/sub
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.getenv("REDIS_URL", "redis://:redis@localhost:6379/0")
 redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
 
@@ -115,7 +115,7 @@ class NoteConnectionManager:
         # Send message
         await websocket.send_json(message)
 
-    async def apply_patch(
+    def apply_patch(
         self, note_content: Dict[str, Any], patch_data: str
     ) -> Dict[str, Any]:
         """Apply a JSON patch to note content using jsonmerge"""
@@ -134,6 +134,19 @@ class NoteConnectionManager:
 
 # Global connection manager
 manager = NoteConnectionManager()
+
+
+def get_note_if_exists_sync(note_id: str, db) -> Note:
+    """Get a note if it exists (synchronous version for WebSocket)"""
+    note = db.query(Note).filter(Note.note_id == note_id, Note.deleted == False).first()
+
+    if not note:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Note with ID {note_id} not found",
+        )
+
+    return note
 
 
 async def get_note_if_exists(note_id: str, db: AsyncSession) -> Note:
@@ -155,86 +168,143 @@ async def get_note_if_exists(note_id: str, db: AsyncSession) -> Note:
 async def handle_websocket_connection(
     websocket: WebSocket,
     note_id: str,
-    db: AsyncSession = Depends(get_async_db),
 ):
     """Handle WebSocket connection for real-time note editing"""
+    print(f"DEBUG: Starting WebSocket handler for note {note_id}")
     try:
-        # Get the note
-        note = await get_note_if_exists(note_id, db)
+        # Accept the WebSocket connection first
+        print("DEBUG: Accepting WebSocket connection")
+        await websocket.accept()
+        print("DEBUG: WebSocket accepted")
 
-        # Connect to the WebSocket
-        await manager.connect(websocket, note_id)
+        # Extract API key from query parameters
+        query_params = dict(websocket.query_params)
+        api_key = query_params.get("api_key")
+        print(f"DEBUG: API key: {api_key}")
 
-        # Send initial note state
-        await websocket.send_json(
-            {
-                "type": "init",
-                "data": {
-                    "note_id": note.note_id,
-                    "title": note.title,
-                    "content_md": note.content_md,
-                    "version": note.version,
-                },
+        # Simple API key check - accept any non-empty key for now
+        if not api_key:
+            print("DEBUG: No API key, closing connection")
+            await websocket.close(code=1008, reason="API key required")
+            return
+
+        # Use synchronous database operations to avoid greenlet issues
+        # Get the note initially and send init message
+        print("DEBUG: Creating database session")
+        with SessionLocal() as db:
+            print("DEBUG: Getting note from database")
+            note = get_note_if_exists_sync(note_id, db)
+
+            # Add to connection manager (but don't call accept again)
+            if note_id not in manager.active_connections:
+                manager.active_connections[note_id] = []
+            manager.active_connections[note_id].append(websocket)
+            manager.connection_details[websocket] = {
+                "note_id": note_id,
+                "connected_at": time.time(),
+                "bytes_sent": 0,
+                "bytes_received": 0,
             }
-        )
 
-        # Handle incoming messages
+            # Send initial note state
+            await websocket.send_json(
+                {
+                    "type": "init",
+                    "data": {
+                        "note_id": note.note_id,
+                        "title": note.title,
+                        "content_md": note.content_md,
+                        "version": note.version,
+                    },
+                }
+            )
+
+        # Handle incoming messages - each operation gets its own DB session
+        print("DEBUG: Starting message loop")
         while True:
             try:
+                print("DEBUG: Waiting for message...")
                 # Receive JSON message
                 message = await websocket.receive_json()
+                print(f"DEBUG: Received message: {message}")
 
                 # Handle patch
                 if message.get("type") == "patch":
-                    patch_data = WebSocketPatch(**message.get("data", {}))
+                    try:
+                        print("DEBUG: Creating patch data")
+                        patch_data = WebSocketPatch(**message.get("data", {}))
+                        print(f"DEBUG: Patch data created: {patch_data}")
 
-                    # Get current note state
-                    note = await get_note_if_exists(note_id, db)
+                        # Create fresh synchronous database session for this operation
+                        print("DEBUG: Opening database session")
+                        with SessionLocal() as db:
+                            # Get current note state
+                            note = get_note_if_exists_sync(note_id, db)
 
-                    # Check version
-                    if patch_data.version != note.version:
+                            # Check version
+                            if patch_data.version != note.version:
+                                await websocket.send_json(
+                                    {
+                                        "type": "error",
+                                        "data": {
+                                            "code": "VERSION_MISMATCH",
+                                            "message": "Note version mismatch",
+                                            "current_version": note.version,
+                                        },
+                                    }
+                                )
+                                continue
+
+                            # Apply patch
+                            note_content = {
+                                "title": note.title,
+                                "content_md": note.content_md,
+                            }
+                            updated_content = manager.apply_patch(
+                                note_content, patch_data.patch
+                            )
+
+                            # Update note in database
+                            note.title = updated_content.get("title", note.title)
+                            note.content_md = updated_content.get(
+                                "content_md", note.content_md
+                            )
+                            note.version += 1
+
+                            db.add(note)
+                            db.commit()  # Synchronous commit
+
+                            # Prepare update message
+                            update_message = {
+                                "type": "update",
+                                "data": {
+                                    "title": note.title,
+                                    "content_md": note.content_md,
+                                    "version": note.version,
+                                },
+                            }
+
+                        # Send to all connected clients for this note (outside db session)
+                        if note_id in manager.active_connections:
+                            for client_ws in manager.active_connections[note_id]:
+                                if client_ws != websocket:  # Don't send to sender
+                                    try:
+                                        await client_ws.send_json(update_message)
+                                    except:
+                                        pass  # Client might be disconnected
+                    except Exception as e:
                         await websocket.send_json(
                             {
                                 "type": "error",
-                                "data": {
-                                    "code": "VERSION_MISMATCH",
-                                    "message": "Note version mismatch",
-                                    "current_version": note.version,
-                                },
+                                "data": {"code": "PATCH_ERROR", "message": str(e)},
                             }
                         )
-                        continue
-
-                    # Apply patch
-                    note_content = {"title": note.title, "content_md": note.content_md}
-                    updated_content = await manager.apply_patch(
-                        note_content, patch_data.patch
-                    )
-
-                    # Update note in database
-                    note.title = updated_content.get("title", note.title)
-                    note.content_md = updated_content.get("content_md", note.content_md)
-                    note.version += 1
-
-                    db.add(note)
-                    await db.commit()
-
-                    # Broadcast update to all clients
-                    await manager.broadcast_to_note(
-                        note_id,
-                        {
-                            "type": "update",
-                            "data": {
-                                "title": note.title,
-                                "content_md": note.content_md,
-                                "version": note.version,
-                            },
-                        },
-                    )
             except WebSocketDisconnect:
                 break
             except Exception as e:
                 # Send error to client
+                print(f"WebSocket error in message handling: {e}")
+                print(f"Error type: {type(e)}")
                 await websocket.send_json(
                     {
                         "type": "error",
