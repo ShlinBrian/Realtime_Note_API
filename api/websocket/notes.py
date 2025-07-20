@@ -120,8 +120,10 @@ class NoteConnectionManager:
     ) -> Dict[str, Any]:
         """Apply a JSON patch to note content using jsonmerge"""
         try:
-            # Decode the base64 patch data
-            patch_json = json.loads(base64.b64decode(patch_data).decode("utf-8"))
+            # Decode the base64 patch data with proper Unicode support
+            decoded_bytes = base64.b64decode(patch_data)
+            decoded_string = decoded_bytes.decode("utf-8")
+            patch_json = json.loads(decoded_string)
 
             # Use jsonmerge to merge the patch with the original content
             merged_content = self.merger.merge(note_content, patch_json)

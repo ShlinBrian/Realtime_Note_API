@@ -2,6 +2,12 @@
 
 A Kubernetes-native service that delivers real-time, multi-user Markdown note editing plus semantic AI search as a turnkey backend component.
 
+## UI Demo
+
+![Realtime Notes Interface](demo_static/Enterprise_AI_Platform.png)
+
+*Real-time collaborative markdown editor with live preview, showing enterprise-grade content with ASCII diagrams, performance metrics, and rich formatting*
+
 ## Features
 
 - Real-time CRDT collaboration via WebSocket

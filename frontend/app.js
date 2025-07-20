@@ -407,8 +407,12 @@ class RealtimeNotesApp {
                 content_md: this.markdownEditor.value
             };
 
-            // Encode patch as base64
-            const patchData = btoa(JSON.stringify(currentContent));
+            // Encode patch as base64 with proper Unicode support
+            const jsonString = JSON.stringify(currentContent);
+            const encoder = new TextEncoder();
+            const uint8Array = encoder.encode(jsonString);
+            const binaryString = String.fromCharCode(...uint8Array);
+            const patchData = btoa(binaryString);
 
             const message = {
                 type: 'patch',
