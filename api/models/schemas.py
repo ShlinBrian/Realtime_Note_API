@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime, date
 from enum import Enum
@@ -149,6 +149,14 @@ class Note(NoteBase):
     )
     created_at: datetime = Field(..., description="When the note was created")
     updated_at: datetime = Field(..., description="When the note was last updated")
+
+    @field_validator('title')
+    @classmethod
+    def validate_title(cls, v):
+        """Ensure title is not empty, provide default if needed"""
+        if not v or v.strip() == '':
+            return 'Untitled Note'
+        return v
 
     class Config:
         from_attributes = True

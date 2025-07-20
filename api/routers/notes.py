@@ -198,9 +198,16 @@ async def get_note(
     """
     Get a note by ID
     """
+    # Get or create default organization
+    org_id = await get_or_create_default_organization(db)
+    
     # Get note
     result = await db.execute(
-        select(Note).where(Note.note_id == note_id, Note.deleted == False)
+        select(Note).where(
+            Note.note_id == note_id, 
+            Note.deleted == False,
+            Note.org_id == org_id
+        )
     )
     note = result.scalar_one_or_none()
 
@@ -216,8 +223,7 @@ async def get_note(
     # Check If-None-Match header for conditional GET
     if_none_match = request.headers.get("if-none-match")
     if if_none_match and if_none_match == f'W/"{note.version}"':
-        response.status_code = status.HTTP_304_NOT_MODIFIED
-        return None
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED)
 
     return note
 
@@ -298,9 +304,16 @@ async def update_note(
 
     **Returns:** Object with the new version number
     """
+    # Get or create default organization
+    org_id = await get_or_create_default_organization(db)
+    
     # Get note
     result = await db.execute(
-        select(Note).where(Note.note_id == note_id, Note.deleted == False)
+        select(Note).where(
+            Note.note_id == note_id, 
+            Note.deleted == False,
+            Note.org_id == org_id
+        )
     )
     note = result.scalar_one_or_none()
 
@@ -395,9 +408,16 @@ async def delete_note(
 
     **Returns:** Confirmation object with `deleted: true`
     """
+    # Get or create default organization
+    org_id = await get_or_create_default_organization(db)
+    
     # Get note
     result = await db.execute(
-        select(Note).where(Note.note_id == note_id, Note.deleted == False)
+        select(Note).where(
+            Note.note_id == note_id, 
+            Note.deleted == False,
+            Note.org_id == org_id
+        )
     )
     note = result.scalar_one_or_none()
 
@@ -522,10 +542,14 @@ async def list_notes(
 
     **Returns:** Array of note objects, newest first
     """
-    # Get notes
+    # Get or create default organization
+    org_id = await get_or_create_default_organization(db)
+    
+    # Get notes for the organization
     result = await db.execute(
         select(Note)
         .where(Note.deleted == False)
+        .where(Note.org_id == org_id)
         .offset(skip)
         .limit(limit)
         .order_by(Note.updated_at.desc())

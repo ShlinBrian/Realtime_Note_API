@@ -12,6 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import TypeDecorator
 from sqlalchemy.orm import relationship
 import enum
 from datetime import datetime
@@ -21,6 +22,17 @@ import uuid
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+
+class JSONBorJSON(TypeDecorator):
+    """Use JSONB for PostgreSQL, JSON for other databases"""
+    impl = JSON
+    
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(JSONB())
+        else:
+            return dialect.type_descriptor(JSON())
 
 
 class UserRole(enum.Enum):
@@ -36,7 +48,7 @@ class Organization(Base):
     org_id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    quota_json = Column(JSONB, nullable=True)
+    quota_json = Column(JSONBorJSON, nullable=True)
 
     users = relationship("User", back_populates="organization")
     api_keys = relationship("ApiKey", back_populates="organization")
