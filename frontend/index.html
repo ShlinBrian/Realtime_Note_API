@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Notes - Collaborative Markdown Editor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1e1e1e;
+            color: #e4e4e4;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d2d2d;
+            padding: 12px 20px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #61dafb;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #28a745;
+        }
+
+        .status-indicator.connecting {
+            background: #ffc107;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #252525;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #e4e4e4;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #005a9e;
+        }
+
+        .btn:disabled {
+            background: #404040;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .note-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .note-item:hover {
+            background: #3d3d3d;
+            border-color: #61dafb;
+        }
+
+        .note-item.active {
+            background: #1e3a5f;
+            border-color: #61dafb;
+        }
+
+        .note-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #61dafb;
+            font-size: 14px;
+        }
+
+        .note-preview {
+            font-size: 12px;
+            color: #a0a0a0;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            padding: 16px 20px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .note-title-input {
+            flex: 1;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #e4e4e4;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+
+        .editor-content {
+            flex: 1;
+            display: flex;
+        }
+
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #404040;
+        }
+
+        .editor-pane:last-child {
+            border-right: none;
+        }
+
+        .pane-header {
+            padding: 8px 16px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            font-size: 12px;
+            font-weight: 600;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .editor-textarea {
+            flex: 1;
+            padding: 20px;
+            background: #1e1e1e;
+            border: none;
+            color: #e4e4e4;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .preview-content {
+            flex: 1;
+            padding: 20px;
+            background: #1e1e1e;
+            overflow-y: auto;
+            color: #e4e4e4;
+            line-height: 1.6;
+        }
+
+        .users-online {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a0a0a0;
+            font-size: 12px;
+        }
+
+        .user-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #61dafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #1e1e1e;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .create-note-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .create-note-input {
+            flex: 1;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #e4e4e4;
+            font-size: 12px;
+        }
+
+        /* Markdown styles */
+        .preview-content h1, .preview-content h2, .preview-content h3,
+        .preview-content h4, .preview-content h5, .preview-content h6 {
+            color: #61dafb;
+            margin: 1.5em 0 0.5em 0;
+        }
+
+        .preview-content h1 { font-size: 2em; }
+        .preview-content h2 { font-size: 1.5em; }
+        .preview-content h3 { font-size: 1.2em; }
+
+        .preview-content p {
+            margin: 1em 0;
+        }
+
+        .preview-content code {
+            background: #2d2d2d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            color: #f8f8f2;
+        }
+
+        .preview-content pre {
+            background: #2d2d2d;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .preview-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .preview-content blockquote {
+            border-left: 4px solid #61dafb;
+            padding-left: 16px;
+            margin: 1em 0;
+            color: #a0a0a0;
+        }
+
+        .preview-content ul, .preview-content ol {
+            padding-left: 20px;
+            margin: 1em 0;
+        }
+
+        .preview-content li {
+            margin: 0.5em 0;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #007acc;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-edit"></i> Realtime Notes</h1>
+        <div class="connection-status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Disconnected</span>
+            <div class="users-online" id="usersOnline"></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <input type="password" id="apiKey" class="api-key-input" placeholder="Enter API Key">
+                <button id="connectBtn" class="btn">Connect</button>
+                
+                <div class="create-note-form" style="margin-top: 16px;">
+                    <input type="text" id="newNoteTitle" class="create-note-input" placeholder="New note title">
+                    <button id="createNoteBtn" class="btn btn-secondary">Create</button>
+                </div>
+            </div>
+
+            <div class="notes-list" id="notesList">
+                <div class="empty-state">
+                    <i class="fas fa-sticky-note"></i>
+                    <p>Enter your API key to load notes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-header">
+                <input type="text" id="noteTitle" class="note-title-input" placeholder="Note Title" disabled>
+                <div class="users-online">
+                    <span>Version: <span id="noteVersion">-</span></span>
+                    <button id="deleteNoteBtn" class="btn btn-danger btn-small" style="margin-left: 12px;" disabled>
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-content">
+                <div class="editor-pane">
+                    <div class="pane-header">
+                        <i class="fas fa-code"></i> Markdown Editor
+                    </div>
+                    <textarea id="markdownEditor" class="editor-textarea" placeholder="Start typing your markdown here..." disabled></textarea>
+                </div>
+
+                <div class="editor-pane">
+                    <div class="pane-header">
+                        <i class="fas fa-eye"></i> Live Preview
+                    </div>
+                    <div id="markdownPreview" class="preview-content">
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt"></i>
+                            <p>Select a note to start editing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
