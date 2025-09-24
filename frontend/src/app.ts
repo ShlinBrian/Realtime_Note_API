@@ -191,7 +191,7 @@ class RealtimeNotesApp {
     }
 
     this.elements.notesList.innerHTML = this.notes.map(note => `
-      <div class="note-item" data-note-id="${note.note_id}" onclick="app.selectNote('${note.note_id}')">
+      <div class="card card-interactive note-item" data-note-id="${note.note_id}" onclick="app.selectNote('${note.note_id}')">
         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
         <div class="note-preview">${this.escapeHtml(this.getPreview(note.content_md))}</div>
       </div>
@@ -266,10 +266,10 @@ class RealtimeNotesApp {
 
       // Update UI to show selected note
       document.querySelectorAll('.note-item').forEach(item => {
-        item.classList.remove('active');
+        item.classList.remove('active', 'card-active');
       });
       const selectedItem = document.querySelector(`[data-note-id="${noteId}"]`);
-      selectedItem?.classList.add('active');
+      selectedItem?.classList.add('active', 'card-active');
 
       // Fetch note details
       const response = await fetch(`${this.apiBaseUrl}/v1/notes/${noteId}`, {

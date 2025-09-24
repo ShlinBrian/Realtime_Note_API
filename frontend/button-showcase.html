@@ -246,11 +246,115 @@
         .input-demo {
             max-width: 300px;
         }
+
+        /* Card styles from main app */
+        .card {
+            /* Spacing */
+            padding: 12px;
+            margin-bottom: 8px;
+
+            /* Appearance */
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+            /* Transitions */
+            transition: all 0.2s ease;
+
+            /* Layout */
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card:hover {
+            background: #3d3d3d;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .card:focus {
+            outline: 2px solid #61dafb;
+            outline-offset: 2px;
+        }
+
+        /* Card Interactive */
+        .card-interactive {
+            cursor: pointer;
+        }
+
+        .card-interactive:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Card Selected/Active */
+        .card-active {
+            background: #2d2d2d;
+            border-color: #61dafb;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px #61dafb;
+        }
+
+        .card-active:hover {
+            background: #3d3d3d;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px #61dafb;
+        }
+
+        /* Card Disabled */
+        .card-disabled {
+            background: #404040;
+            color: #6c757d;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .card-disabled:hover {
+            background: #404040;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .note-title {
+            /* Typography */
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+
+            /* Spacing */
+            margin: 0 0 4px 0;
+
+            /* Appearance */
+            color: #61dafb;
+        }
+
+        .note-preview {
+            /* Typography */
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.4;
+
+            /* Spacing */
+            margin: 0;
+
+            /* Appearance */
+            color: #a0a0a0;
+
+            /* Text overflow */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-demo {
+            max-width: 280px;
+        }
     </style>
 </head>
 <body>
     <div class="showcase">
-        <h1>Button & Input Component Showcase</h1>
+        <h1>Component Showcase: Buttons, Inputs & Cards</h1>
 
         <div class="section">
             <h2>Base Variants</h2>
@@ -473,6 +577,118 @@
                 <div class="button-demo input-demo">
                     <input type="text" class="input input-large" placeholder="Note Title" style="font-weight: 600;">
                     <span class="button-label">Note Title Input (Large)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Card Components</h2>
+            <h3 style="color: #61dafb; margin: 16px 0 8px 0; font-size: 16px;">Base Card</h3>
+            <div class="button-grid">
+                <div class="button-demo card-demo">
+                    <div class="card">
+                        <h4 style="margin: 0 0 8px 0; color: #e4e4e4; font-size: 14px;">Basic Card</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px;">Simple card with shadow and hover effects</p>
+                    </div>
+                    <span class="button-label">Base Card</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card card-interactive">
+                        <h4 style="margin: 0 0 8px 0; color: #e4e4e4; font-size: 14px;">Interactive Card</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px;">Clickable card with pointer cursor</p>
+                    </div>
+                    <span class="button-label">Interactive Card</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Card States</h2>
+            <div class="button-grid">
+                <div class="button-demo card-demo">
+                    <div class="card card-interactive">
+                        <h4 style="margin: 0 0 8px 0; color: #e4e4e4; font-size: 14px;">Default State</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px;">Normal card appearance</p>
+                    </div>
+                    <span class="button-label">Default State</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card card-interactive" style="background: #3d3d3d; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); transform: translateY(-1px);">
+                        <h4 style="margin: 0 0 8px 0; color: #e4e4e4; font-size: 14px;">Hover State</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px;">Elevated with darker background</p>
+                    </div>
+                    <span class="button-label">Hover State</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card card-interactive card-active">
+                        <h4 style="margin: 0 0 8px 0; color: #e4e4e4; font-size: 14px;">Active/Selected</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px;">Selected with brand color border</p>
+                    </div>
+                    <span class="button-label">Active/Selected State</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card card-disabled">
+                        <h4 style="margin: 0 0 8px 0; color: #6c757d; font-size: 14px;">Disabled Card</h4>
+                        <p style="margin: 0; color: #6c757d; font-size: 12px;">Muted appearance, non-interactive</p>
+                    </div>
+                    <span class="button-label">Disabled State</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Note Card Examples</h2>
+            <div class="button-grid">
+                <div class="button-demo card-demo">
+                    <div class="card card-interactive">
+                        <div class="note-title">Meeting Notes</div>
+                        <div class="note-preview">Discussed project timeline and budget allocation for Q4...</div>
+                    </div>
+                    <span class="button-label">Note Item Card</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card card-interactive card-active">
+                        <div class="note-title">Project Ideas</div>
+                        <div class="note-preview">Brainstorming session for new features and improvements...</div>
+                    </div>
+                    <span class="button-label">Selected Note Card</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card card-disabled">
+                        <div class="note-title">Archived Note</div>
+                        <div class="note-preview">This note has been archived and is no longer editable...</div>
+                    </div>
+                    <span class="button-label">Disabled Note Card</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Content Cards</h2>
+            <div class="button-grid">
+                <div class="button-demo card-demo">
+                    <div class="card">
+                        <i class="fas fa-info-circle" style="color: #007acc; margin-bottom: 8px; font-size: 20px;"></i>
+                        <h4 style="margin: 0 0 4px 0; color: #e4e4e4; font-size: 14px;">Information</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px; line-height: 1.4;">This is an information card with an icon</p>
+                    </div>
+                    <span class="button-label">Info Card</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card">
+                        <i class="fas fa-check-circle" style="color: #28a745; margin-bottom: 8px; font-size: 20px;"></i>
+                        <h4 style="margin: 0 0 4px 0; color: #e4e4e4; font-size: 14px;">Success</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px; line-height: 1.4;">This is a success card with green accent</p>
+                    </div>
+                    <span class="button-label">Success Card</span>
+                </div>
+                <div class="button-demo card-demo">
+                    <div class="card">
+                        <i class="fas fa-exclamation-triangle" style="color: #ffc107; margin-bottom: 8px; font-size: 20px;"></i>
+                        <h4 style="margin: 0 0 4px 0; color: #e4e4e4; font-size: 14px;">Warning</h4>
+                        <p style="margin: 0; color: #a0a0a0; font-size: 12px; line-height: 1.4;">This is a warning card with yellow accent</p>
+                    </div>
+                    <span class="button-label">Warning Card</span>
                 </div>
             </div>
         </div>

@@ -285,37 +285,110 @@
             padding: 16px;
         }
 
-        .note-item {
+        /* Base Card Styles */
+        .card {
+            /* Spacing */
             padding: 12px;
             margin-bottom: 8px;
+
+            /* Appearance */
             background: #2d2d2d;
             border: 1px solid #404040;
             border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+            /* Transitions */
+            transition: all 0.2s ease;
+
+            /* Layout */
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .note-item:hover {
+        .card:hover {
             background: #3d3d3d;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .card:focus {
+            outline: 2px solid #61dafb;
+            outline-offset: 2px;
+        }
+
+        /* Card Interactive */
+        .card-interactive {
+            cursor: pointer;
+        }
+
+        .card-interactive:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Card Selected/Active */
+        .card-active {
+            background: #2d2d2d;
             border-color: #61dafb;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px #61dafb;
+        }
+
+        .card-active:hover {
+            background: #3d3d3d;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px #61dafb;
+        }
+
+        /* Card Disabled */
+        .card-disabled {
+            background: #404040;
+            color: #6c757d;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .card-disabled:hover {
+            background: #404040;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Legacy note-item class inherits card styles */
+        .note-item {
+            /* Empty - inherits from .card .card-interactive */
         }
 
         .note-item.active {
-            background: #1e3a5f;
-            border-color: #61dafb;
+            /* Empty - inherits from .card-active */
         }
 
         .note-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #61dafb;
+            /* Typography */
             font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+
+            /* Spacing */
+            margin: 0 0 4px 0;
+
+            /* Appearance */
+            color: #61dafb;
         }
 
         .note-preview {
+            /* Typography */
             font-size: 12px;
-            color: #a0a0a0;
+            font-weight: 400;
             line-height: 1.4;
+
+            /* Spacing */
+            margin: 0;
+
+            /* Appearance */
+            color: #a0a0a0;
+
+            /* Text overflow */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -413,19 +486,39 @@
         }
 
         .empty-state {
+            /* Layout */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: #6c757d;
+
+            /* Spacing */
+            padding: 32px 16px;
+
+            /* Typography */
             text-align: center;
+            color: #6c757d;
         }
 
         .empty-state i {
+            /* Typography */
             font-size: 48px;
+
+            /* Spacing */
             margin-bottom: 16px;
+
+            /* Appearance */
             opacity: 0.5;
+        }
+
+        .empty-state p {
+            /* Typography */
+            font-size: 14px;
+            line-height: 1.4;
+
+            /* Spacing */
+            margin: 0;
         }
 
         .create-note-form {
