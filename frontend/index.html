@@ -31,10 +31,74 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        /* Base Typography System */
+        .text-hero {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        .text-page-header {
+            font-size: 30px;
+            font-weight: 600;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .text-section {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .text-large {
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .text-header {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .text-primary {
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .text-body {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .text-small {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* Typography Colors */
+        .text-primary-color { color: #e4e4e4; }
+        .text-secondary-color { color: #a0a0a0; }
+        .text-muted-color { color: #6c757d; }
+        .text-brand-color { color: #61dafb; }
+
         .header h1 {
             color: #61dafb;
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 500;
+            line-height: 1.4;
         }
 
         .connection-status {
@@ -432,11 +496,15 @@
         }
 
         .pane-header {
+            /* Layout */
             padding: 8px 16px;
             background: #2d2d2d;
             border-bottom: 1px solid #404040;
+
+            /* Typography */
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 500;
+            line-height: 1.4;
             color: #a0a0a0;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -456,12 +524,16 @@
         }
 
         .preview-content {
+            /* Layout */
             flex: 1;
             padding: 20px;
             background: #1e1e1e;
             overflow-y: auto;
+
+            /* Typography */
             color: #e4e4e4;
-            line-height: 1.6;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .users-online {
@@ -531,56 +603,105 @@
             flex: 1;
         }
 
-        /* Markdown styles */
+        /* Markdown Typography Styles */
         .preview-content h1, .preview-content h2, .preview-content h3,
         .preview-content h4, .preview-content h5, .preview-content h6 {
             color: #61dafb;
-            margin: 1.5em 0 0.5em 0;
+            font-weight: 600;
+            margin: 24px 0 8px 0; /* Using spacing scale: 24px, 8px */
         }
 
-        .preview-content h1 { font-size: 2em; }
-        .preview-content h2 { font-size: 1.5em; }
-        .preview-content h3 { font-size: 1.2em; }
+        .preview-content h1 {
+            font-size: 30px; /* text-page-header */
+            line-height: 1.2;
+        }
+
+        .preview-content h2 {
+            font-size: 24px; /* text-section */
+            line-height: 1.3;
+        }
+
+        .preview-content h3 {
+            font-size: 20px; /* text-large */
+            line-height: 1.4;
+        }
+
+        .preview-content h4 {
+            font-size: 18px; /* text-header */
+            line-height: 1.4;
+        }
+
+        .preview-content h5 {
+            font-size: 16px; /* text-primary */
+            line-height: 1.4;
+        }
+
+        .preview-content h6 {
+            font-size: 14px; /* text-body */
+            line-height: 1.4;
+        }
 
         .preview-content p {
-            margin: 1em 0;
+            margin: 16px 0; /* Using spacing scale: 16px */
+            line-height: 1.5;
         }
 
         .preview-content code {
+            /* Appearance */
             background: #2d2d2d;
-            padding: 2px 6px;
-            border-radius: 3px;
+            border-radius: 4px; /* Design token border radius */
+
+            /* Spacing */
+            padding: 4px 8px; /* Design token spacing scale */
+
+            /* Typography */
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            color: #f8f8f2;
+            font-size: 12px; /* text-small */
+            color: #e4e4e4; /* text-primary-color */
         }
 
         .preview-content pre {
+            /* Appearance */
             background: #2d2d2d;
-            padding: 16px;
-            border-radius: 6px;
+            border-radius: 6px; /* Design token border radius */
             overflow-x: auto;
-            margin: 1em 0;
+
+            /* Spacing */
+            padding: 16px; /* Design token spacing scale */
+            margin: 16px 0; /* Design token spacing scale */
         }
 
         .preview-content pre code {
             background: none;
             padding: 0;
+            border-radius: 0;
         }
 
         .preview-content blockquote {
-            border-left: 4px solid #61dafb;
-            padding-left: 16px;
-            margin: 1em 0;
-            color: #a0a0a0;
+            /* Appearance */
+            border-left: 4px solid #61dafb; /* Brand color */
+
+            /* Spacing */
+            padding-left: 16px; /* Design token spacing scale */
+            margin: 16px 0; /* Design token spacing scale */
+
+            /* Typography */
+            color: #a0a0a0; /* text-secondary-color */
+            font-style: italic;
         }
 
         .preview-content ul, .preview-content ol {
-            padding-left: 20px;
-            margin: 1em 0;
+            /* Spacing */
+            padding-left: 20px; /* Design token spacing scale */
+            margin: 16px 0; /* Design token spacing scale */
         }
 
         .preview-content li {
-            margin: 0.5em 0;
+            /* Spacing */
+            margin: 8px 0; /* Design token spacing scale */
+
+            /* Typography */
+            line-height: 1.5;
         }
 
         .notification {

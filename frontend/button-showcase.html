@@ -350,14 +350,173 @@
         .card-demo {
             max-width: 280px;
         }
+
+        /* Typography styles from main app */
+        .text-hero {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        .text-page-header {
+            font-size: 30px;
+            font-weight: 600;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .text-section {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .text-large {
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .text-header {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .text-primary {
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .text-body {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .text-small {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* Typography Colors */
+        .text-primary-color { color: #e4e4e4; }
+        .text-secondary-color { color: #a0a0a0; }
+        .text-muted-color { color: #6c757d; }
+        .text-brand-color { color: #61dafb; }
+
+        .typography-demo {
+            max-width: 600px;
+        }
+
+        .code-demo {
+            background: #2d2d2d;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            color: #e4e4e4;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
     <div class="showcase">
-        <h1>Component Showcase: Buttons, Inputs & Cards</h1>
+        <h1>Design System Showcase: Typography, Buttons, Inputs & Cards</h1>
 
         <div class="section">
-            <h2>Base Variants</h2>
+            <h2>Typography System</h2>
+            <h3 style="color: #61dafb; margin: 16px 0 8px 0; font-size: 16px;">Typography Scale</h3>
+            <div class="typography-demo">
+                <div style="margin-bottom: 24px;">
+                    <h1 class="text-hero text-brand-color">Hero Text (36px/700)</h1>
+                    <span class="text-small text-muted-color">Used for main application titles and hero sections</span>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <h2 class="text-page-header text-brand-color">Page Header (30px/600)</h2>
+                    <span class="text-small text-muted-color">Used for main page headings and H1 in markdown</span>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <h3 class="text-section text-brand-color">Section Header (24px/600)</h3>
+                    <span class="text-small text-muted-color">Used for section headings and H2 in markdown</span>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <h4 class="text-large text-brand-color">Large Text (20px/500)</h4>
+                    <span class="text-small text-muted-color">Used for H3 headings and emphasized content</span>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <h5 class="text-header text-brand-color">Header Text (18px/500)</h5>
+                    <span class="text-small text-muted-color">Used for H4 headings and interface headers</span>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <p class="text-primary text-primary-color">Primary Content (16px/400)</p>
+                    <span class="text-small text-muted-color">Used for H5 headings and main content text</span>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <p class="text-body text-primary-color">Body Text (14px/400)</p>
+                    <span class="text-small text-muted-color">Used for H6, form inputs, and general UI text</span>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <p class="text-small text-secondary-color">Small Text (12px/400)</p>
+                    <span class="text-small text-muted-color">Used for labels, metadata, and secondary information</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Typography Colors</h2>
+            <div class="button-grid">
+                <div class="button-demo typography-demo" style="max-width: 300px;">
+                    <p class="text-body text-primary-color">Primary Color (#e4e4e4)</p>
+                    <span class="button-label">Primary Text</span>
+                </div>
+                <div class="button-demo typography-demo" style="max-width: 300px;">
+                    <p class="text-body text-secondary-color">Secondary Color (#a0a0a0)</p>
+                    <span class="button-label">Secondary Text</span>
+                </div>
+                <div class="button-demo typography-demo" style="max-width: 300px;">
+                    <p class="text-body text-muted-color">Muted Color (#6c757d)</p>
+                    <span class="button-label">Muted Text</span>
+                </div>
+                <div class="button-demo typography-demo" style="max-width: 300px;">
+                    <p class="text-body text-brand-color">Brand Color (#61dafb)</p>
+                    <span class="button-label">Brand Text</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Markdown Preview Typography</h2>
+            <div class="typography-demo">
+                <div style="background: #1e1e1e; padding: 20px; border-radius: 6px; border: 1px solid #404040;">
+                    <h1 style="font-size: 30px; font-weight: 600; color: #61dafb; margin: 0 0 8px 0; line-height: 1.2;">H1 Heading (30px)</h1>
+                    <h2 style="font-size: 24px; font-weight: 600; color: #61dafb; margin: 24px 0 8px 0; line-height: 1.3;">H2 Heading (24px)</h2>
+                    <h3 style="font-size: 20px; font-weight: 600; color: #61dafb; margin: 24px 0 8px 0; line-height: 1.4;">H3 Heading (20px)</h3>
+                    <h4 style="font-size: 18px; font-weight: 600; color: #61dafb; margin: 24px 0 8px 0; line-height: 1.4;">H4 Heading (18px)</h4>
+                    <p style="color: #e4e4e4; margin: 16px 0; line-height: 1.5; font-size: 14px;">This is body text that demonstrates the typography scale and spacing in markdown preview. All headings use consistent spacing from the design token scale.</p>
+                    <blockquote style="border-left: 4px solid #61dafb; padding-left: 16px; margin: 16px 0; color: #a0a0a0; font-style: italic;">
+                        This is a blockquote with brand color accent and secondary text color.
+                    </blockquote>
+                    <div class="code-demo">
+                        <code>const example = "This is inline code with proper spacing and colors";</code>
+                    </div>
+                </div>
+                <span class="button-label">Markdown Preview Styling</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Button Components</h2>
             <div class="button-grid">
                 <div class="button-demo">
                     <button class="btn">Primary</button>
