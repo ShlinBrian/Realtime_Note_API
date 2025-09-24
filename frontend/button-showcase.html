@@ -171,11 +171,86 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Input styles from main app */
+        .input {
+            /* Typography */
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.4;
+
+            /* Spacing */
+            padding: 12px 16px;
+            margin: 0;
+
+            /* Appearance */
+            width: 100%;
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #e4e4e4;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+            /* Transitions */
+            transition: all 0.2s ease;
+
+            /* Remove default styling */
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .input::placeholder {
+            color: #6c757d;
+            opacity: 1;
+        }
+
+        .input:focus {
+            border-color: #61dafb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(97, 218, 251, 0.2);
+        }
+
+        .input:disabled {
+            background: #404040;
+            color: #6c757d;
+            cursor: not-allowed;
+            border-color: #404040;
+            box-shadow: none;
+        }
+
+        .input:disabled::placeholder {
+            color: #6c757d;
+        }
+
+        /* Input States */
+        .input-error {
+            border-color: #dc3545;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(220, 53, 69, 0.2);
+        }
+
+        .input-success {
+            border-color: #28a745;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(40, 167, 69, 0.2);
+        }
+
+        /* Input Sizes */
+        .input-small {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
+        .input-large {
+            font-size: 16px;
+            padding: 16px 20px;
+        }
+
+        .input-demo {
+            max-width: 300px;
+        }
     </style>
 </head>
 <body>
     <div class="showcase">
-        <h1>Button Component Showcase</h1>
+        <h1>Button & Input Component Showcase</h1>
 
         <div class="section">
             <h2>Base Variants</h2>
@@ -310,6 +385,97 @@
                 </div>
             </div>
         </div>
+
+        <div class="section">
+            <h2>Input Components</h2>
+            <h3 style="color: #61dafb; margin: 16px 0 8px 0; font-size: 16px;">Base Input</h3>
+            <div class="button-grid">
+                <div class="button-demo input-demo">
+                    <input type="text" class="input" placeholder="Default input">
+                    <span class="button-label">Default Input (14px)</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="password" class="input" placeholder="Password input">
+                    <span class="button-label">Password Input</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="email" class="input" placeholder="Email input">
+                    <span class="button-label">Email Input</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Input Sizes</h2>
+            <div class="button-grid">
+                <div class="button-demo input-demo">
+                    <input type="text" class="input input-small" placeholder="Small input">
+                    <span class="button-label">Small (12px)</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input" placeholder="Default input">
+                    <span class="button-label">Default (14px)</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input input-large" placeholder="Large input">
+                    <span class="button-label">Large (16px)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Input States</h2>
+            <div class="button-grid">
+                <div class="button-demo input-demo">
+                    <input type="text" class="input" placeholder="Default state">
+                    <span class="button-label">Default State</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input" value="Focused input" style="border-color: #61dafb; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(97, 218, 251, 0.2);">
+                    <span class="button-label">Focus State</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input" placeholder="Disabled input" disabled>
+                    <span class="button-label">Disabled State</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Validation States</h2>
+            <div class="button-grid">
+                <div class="button-demo input-demo">
+                    <input type="text" class="input input-error" value="Invalid input">
+                    <span class="button-label">Error State</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input input-success" value="Valid input">
+                    <span class="button-label">Success State</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input" placeholder="Neutral input">
+                    <span class="button-label">Neutral State</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Real-world Input Examples</h2>
+            <div class="button-grid">
+                <div class="button-demo input-demo">
+                    <input type="password" class="input" placeholder="Enter API Key">
+                    <span class="button-label">API Key Input</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input" placeholder="New note title">
+                    <span class="button-label">Create Note Input</span>
+                </div>
+                <div class="button-demo input-demo">
+                    <input type="text" class="input input-large" placeholder="Note Title" style="font-weight: 600;">
+                    <span class="button-label">Note Title Input (Large)</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -321,6 +487,14 @@
                 setInterval(() => {
                     btn.classList.toggle('btn-loading');
                 }, 3000);
+            });
+
+            // Add focus demo
+            const inputs = document.querySelectorAll('.input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    console.log('Input focused:', input.placeholder);
+                });
             });
         });
     </script>
