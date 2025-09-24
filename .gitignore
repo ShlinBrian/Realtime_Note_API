@@ -132,3 +132,7 @@ indices/
 
 # Local development
 run_local.sh
+
+# AI tools
+CLAUDE.md
+.claude/

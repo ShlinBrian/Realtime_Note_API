@@ -70,6 +70,15 @@ services:
       timeout: 5s
       retries: 5
 
+  # Frontend web interface
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
   # Optional: pgAdmin for database management
   pgadmin:
     image: dpage/pgadmin4

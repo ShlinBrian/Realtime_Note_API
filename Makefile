@@ -1,68 +1,59 @@
-.PHONY: api-run api-dev db-run docker-up docker-down docker-logs install test clean help generate-grpc
+.PHONY: run dev test clean help
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  make api-run       - Run the API server"
-	@echo "  make api-dev       - Run the API server in development mode with auto-reload"
-	@echo "  make db-run        - Run PostgreSQL and Redis with Docker"
-	@echo "  make docker-up     - Start all services with Docker Compose"
-	@echo "  make docker-down   - Stop all Docker Compose services"
-	@echo "  make docker-logs   - Show logs from Docker Compose services"
-	@echo "  make install       - Install dependencies"
-	@echo "  make test          - Run tests"
-	@echo "  make clean         - Clean up temporary files and volumes"
-	@echo "  make generate-grpc - Generate gRPC code from proto files"
+	@echo "  make run   - Start all services with Docker (recommended)"
+	@echo "  make dev   - Run API locally for development (requires conda)"
+	@echo "  make test  - Run tests"
+	@echo "  make clean - Stop services and clean everything"
 
-# Run API server
-api-run: generate-grpc
-	uvicorn api.main:app --host 0.0.0.0 --port 8000
+# Start all services with Docker (recommended)
+run:
+	@echo "Starting all services with Docker..."
+	@docker compose up -d
+	@echo ""
+	@echo "Services starting up..."
+	@echo "API: http://localhost:8000"
+	@echo "API Docs: http://localhost:8000/docs"
+	@echo "Frontend: http://localhost:8080"
+	@echo ""
+	@echo "Waiting for API key generation..."
+	@sleep 5
+	@if [ -f "local_api_key.txt" ]; then \
+		echo "Your API key:"; \
+		cat local_api_key.txt; \
+	else \
+		echo "Check API key with: cat local_api_key.txt"; \
+	fi
+	@echo ""
+	@echo "View logs: docker compose logs -f"
 
-# Run API server in development mode with auto-reload
-api-dev: generate-grpc
-	uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
-
-# Run PostgreSQL and Redis with Docker
-db-run:
-	docker-compose up -d postgres redis pgadmin
-
-# Docker Compose commands
-docker-up:
-	docker-compose up -d
-
-docker-down:
-	docker-compose down
-
-docker-logs:
-	docker-compose logs -f
-
-# Install dependencies
-install:
+# Run API locally for development (requires conda)
+dev:
 	@echo "Installing dependencies..."
-	pip install -r requirements.txt
-	@echo "Install development dependencies? [y/N] " && read ans && [ $${ans:-N} = y ] && pip install -r requirements-dev.txt || true
-
-# Generate gRPC code
-generate-grpc:
+	@if conda env list | grep -q "realtime-note-api"; then \
+		echo "Using existing conda environment..."; \
+	else \
+		echo "Creating conda environment..."; \
+		conda create -n realtime-note-api python=3.11.8 -y; \
+	fi
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate realtime-note-api && conda install -c conda-forge faiss-cpu -y && pip install -r requirements.txt && pip install -r requirements-dev.txt"
 	@echo "Generating gRPC code..."
-	bash scripts/generate_grpc.sh
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate realtime-note-api && bash scripts/generate_grpc.sh"
+	@echo "Starting API in development mode..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate realtime-note-api && uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"
 
 # Run tests
 test:
-	pytest
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate realtime-note-api && pytest"
 
-# Clean up
+# Stop services and clean everything
 clean:
-	docker-compose down -v
-	find . -type d -name __pycache__ -exec rm -rf {} +/
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name "*.pyo" -delete
-	find . -type f -name "*.pyd" -delete
-	find . -type f -name ".coverage" -delete
-	find . -type d -name "*.egg-info" -exec rm -rf {} +/
-	find . -type d -name "*.egg" -exec rm -rf {} +/
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +/
-	find . -type d -name ".coverage" -exec rm -rf {} +/
-	find . -type d -name "htmlcov" -exec rm -rf {} +/
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +/
-	rm -f local_api_key.txt
+	@echo "Stopping all services..."
+	@docker compose down -v
+	@echo "Cleaning temporary files..."
+	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	@rm -f local_api_key.txt
+	@echo "Cleanup complete."
