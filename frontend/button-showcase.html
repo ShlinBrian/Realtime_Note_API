@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Component Showcase</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1e1e1e;
+            color: #e4e4e4;
+            padding: 32px;
+            line-height: 1.6;
+        }
+
+        .showcase {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #252525;
+            border-radius: 8px;
+            border: 1px solid #404040;
+        }
+
+        .section h2 {
+            color: #61dafb;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .button-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .button-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .button-label {
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+
+        /* Button styles from main app */
+        .btn {
+            /* Typography */
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.2;
+
+            /* Spacing */
+            padding: 12px 16px;
+
+            /* Appearance */
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+
+            /* Transitions */
+            transition: all 0.2s ease;
+
+            /* Layout */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #005a9e;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .btn:focus {
+            outline: 2px solid #61dafb;
+            outline-offset: 2px;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:disabled {
+            background: #404040;
+            color: #6c757d;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn:disabled:hover {
+            background: #404040;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-secondary:focus {
+            outline: 2px solid #61dafb;
+            outline-offset: 2px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-danger:focus {
+            outline: 2px solid #61dafb;
+            outline-offset: 2px;
+        }
+
+        .btn-small {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
+        .btn-large {
+            font-size: 16px;
+            padding: 16px 24px;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin-top: -8px;
+            margin-left: -8px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: btn-spin 1s linear infinite;
+            color: white;
+        }
+
+        @keyframes btn-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="showcase">
+        <h1>Button Component Showcase</h1>
+
+        <div class="section">
+            <h2>Base Variants</h2>
+            <div class="button-grid">
+                <div class="button-demo">
+                    <button class="btn">Primary</button>
+                    <span class="button-label">Primary</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-secondary">Secondary</button>
+                    <span class="button-label">Secondary</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-danger">Danger</button>
+                    <span class="button-label">Danger</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Sizes</h2>
+            <div class="button-grid">
+                <div class="button-demo">
+                    <button class="btn btn-small">Small</button>
+                    <span class="button-label">Small (12px)</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn">Default</button>
+                    <span class="button-label">Default (14px)</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-large">Large</button>
+                    <span class="button-label">Large (16px)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>States</h2>
+            <div class="button-grid">
+                <div class="button-demo">
+                    <button class="btn">Default</button>
+                    <span class="button-label">Default State</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn" style="background: #005a9e; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);">Hover</button>
+                    <span class="button-label">Hover State</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn" style="outline: 2px solid #61dafb; outline-offset: 2px;">Focus</button>
+                    <span class="button-label">Focus State</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn" disabled>Disabled</button>
+                    <span class="button-label">Disabled State</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>With Icons</h2>
+            <div class="button-grid">
+                <div class="button-demo">
+                    <button class="btn">
+                        <i class="fas fa-plus"></i>
+                        Create
+                    </button>
+                    <span class="button-label">With Leading Icon</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn">
+                        Save
+                        <i class="fas fa-save"></i>
+                    </button>
+                    <span class="button-label">With Trailing Icon</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-danger">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                    </button>
+                    <span class="button-label">Danger with Icon</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-small">
+                        <i class="fas fa-edit"></i>
+                        Edit
+                    </button>
+                    <span class="button-label">Small with Icon</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Loading States</h2>
+            <div class="button-grid">
+                <div class="button-demo">
+                    <button class="btn btn-loading">Loading</button>
+                    <span class="button-label">Loading Primary</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-secondary btn-loading">Loading</button>
+                    <span class="button-label">Loading Secondary</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-small btn-loading">Loading</button>
+                    <span class="button-label">Loading Small</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Real-world Examples</h2>
+            <div class="button-grid">
+                <div class="button-demo">
+                    <button class="btn">Connect</button>
+                    <span class="button-label">Connection Button</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-plus"></i>
+                        Create Note
+                    </button>
+                    <span class="button-label">Create Note Button</span>
+                </div>
+                <div class="button-demo">
+                    <button class="btn btn-danger btn-small">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                    </button>
+                    <span class="button-label">Delete Note Button</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add interactive demos
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simulate loading state toggle
+            const loadingBtns = document.querySelectorAll('.btn-loading');
+            loadingBtns.forEach(btn => {
+                setInterval(() => {
+                    btn.classList.toggle('btn-loading');
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
