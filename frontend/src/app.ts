@@ -1,4 +1,3 @@
-import { marked } from 'marked';
 import type {
   Note,
   CreateNoteRequest,
@@ -13,11 +12,14 @@ import type {
   AppElements
 } from './types.js';
 
-// Declare global Prism object
+// Declare global objects
 declare global {
   interface Window {
     Prism: {
       highlightElement: (element: Element) => void;
+    };
+    marked: {
+      parse: (markdown: string) => string;
     };
     app: RealtimeNotesApp;
   }
@@ -338,7 +340,7 @@ class RealtimeNotesApp {
     }
 
     try {
-      const html = marked.parse(markdown);
+      const html = window.marked.parse(markdown);
       this.elements.markdownPreview.innerHTML = html;
 
       // Highlight code blocks

@@ -20,8 +20,5 @@
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.3.0"
-  },
-  "dependencies": {
-    "marked": "^9.1.6"
   }
 }
