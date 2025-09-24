@@ -1,6 +1,6 @@
 # Realtime Notes Frontend
 
-A collaborative Markdown editor that connects to the Realtime Notes API for real-time multi-user editing.
+A collaborative Markdown editor built with TypeScript that connects to the Realtime Notes API for real-time multi-user editing.
 
 ## Features
 
@@ -8,24 +8,33 @@ A collaborative Markdown editor that connects to the Realtime Notes API for real
 - **Live Markdown Preview**: See your formatted content as you type
 - **Dark Theme**: Developer-friendly dark interface
 - **API Key Authentication**: Secure connection to the backend
-- **Note Management**: Create, edit, and switch between notes
+- **Note Management**: Create, edit, delete, and switch between notes
 - **WebSocket Connection**: Real-time updates with automatic conflict resolution
+- **Type Safety**: Built with TypeScript for better developer experience
 
 ## Quick Start
 
 1. **Start the API server**:
    ```bash
    cd ..
-   make api-run
+   make run
    ```
 
-2. **Open the frontend**:
+2. **Build and serve the frontend**:
    ```bash
-   # Serve the frontend (use any HTTP server)
-   python -m http.server 8080
-   # or
-   npx serve .
-   # or simply open index.html in your browser
+   # Install dependencies
+   npm install
+
+   # Build TypeScript
+   npm run build
+
+   # Serve the frontend
+   npm run serve
+   ```
+
+   Or for development with file watching:
+   ```bash
+   npm run dev
    ```
 
 3. **Get your API key**:
@@ -120,24 +129,46 @@ The frontend communicates with the backend using WebSocket connections at `/ws/n
 
 ```
 frontend/
-├── index.html          # Main HTML structure
-├── app.js             # JavaScript application logic
+├── src/
+│   ├── app.ts         # Main TypeScript application logic
+│   └── types.ts       # Type definitions and interfaces
+├── dist/              # Compiled JavaScript (generated)
+├── index.html         # Main HTML structure
+├── package.json       # npm configuration and scripts
+├── tsconfig.json      # TypeScript configuration
 └── README.md          # This file
 ```
 
 ### Dependencies
 
-The frontend uses CDN-hosted libraries:
-- **Marked**: Markdown parsing and rendering
+**Runtime Dependencies:**
+- **Marked**: Markdown parsing and rendering (CDN + npm)
+
+**Development Dependencies:**
+- **TypeScript**: Type-safe JavaScript compilation
+
+**CDN Libraries:**
 - **Prism**: Syntax highlighting for code blocks
 - **Font Awesome**: Icons
 - **Prism Tomorrow Theme**: Code syntax theme
 
-### Browser Compatibility
+### Development
 
-- Modern browsers with WebSocket support
-- ES6+ features used (arrow functions, classes, async/await)
-- No build process required - runs directly in the browser
+#### Prerequisites
+- Node.js (v16 or higher)
+- npm
+
+#### Available Scripts
+- `npm run build`: Compile TypeScript to JavaScript
+- `npm run watch`: Watch for changes and recompile automatically
+- `npm run serve`: Start HTTP server on port 8080
+- `npm run dev`: Build and serve (development workflow)
+
+#### Browser Compatibility
+
+- Modern browsers with WebSocket and ES2018 support
+- TypeScript compiles to ES2018 for broad compatibility
+- Modules are loaded as ES modules
 
 ## Configuration
 
