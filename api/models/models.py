@@ -128,7 +128,7 @@ class UsageSummary(Base):
     period = Column(Date, primary_key=True)
     requests = Column(Integer, nullable=False, default=0)
     bytes = Column(Integer, nullable=False, default=0)
-    invoice_json = Column(JSONB, nullable=True)
+    invoice_json = Column(JSONBorJSON, nullable=True)
 
     organization = relationship("Organization")
 
