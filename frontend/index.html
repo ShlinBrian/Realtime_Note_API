@@ -148,6 +148,378 @@
             border-bottom: 1px solid #404040;
         }
 
+        /* Search Interface Styles */
+        .search-container {
+            margin-bottom: 16px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding-right: 84px; /* Space for search and clear buttons */
+        }
+
+        .search-actions {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 2px;
+        }
+
+        .search-btn, .search-clear-btn {
+            padding: 6px 8px;
+            font-size: 12px;
+            min-width: auto;
+            height: 28px;
+            border-radius: 3px;
+        }
+
+        .search-btn {
+            background: #61dafb;
+            color: #1e1e1e;
+        }
+
+        .search-btn:hover {
+            background: #4fc3e8;
+        }
+
+        .search-btn:disabled {
+            background: #404040;
+            color: #6c757d;
+        }
+
+        .search-clear-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .search-clear-btn:hover {
+            background: #545b62;
+        }
+
+        .search-filters {
+            padding: 12px;
+            background: #2d2d2d;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            border: 1px solid #404040;
+            display: none; /* Hidden by default */
+        }
+
+        .search-filters.active {
+            display: block;
+        }
+
+        .filter-group {
+            margin-bottom: 12px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #a0a0a0;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-input {
+            width: 80px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .filter-checkbox {
+            margin-right: 4px;
+        }
+
+        .search-stats {
+            font-size: 12px;
+            color: #a0a0a0;
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            background: #252525;
+            border-radius: 3px;
+            display: none;
+        }
+
+        .search-stats.visible {
+            display: block;
+        }
+
+        .search-results {
+            display: none;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background: #3d3d3d;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .search-result-item.selected {
+            border-color: #61dafb;
+            box-shadow: 0 0 0 1px #61dafb;
+        }
+
+        .search-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .search-result-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #61dafb;
+            margin: 0;
+            flex: 1;
+            margin-right: 8px;
+        }
+
+        .search-result-score {
+            font-size: 11px;
+            color: #a0a0a0;
+            padding: 2px 6px;
+            background: #404040;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        .search-result-snippet {
+            font-size: 12px;
+            color: #a0a0a0;
+            line-height: 1.4;
+            margin: 0 0 6px 0;
+        }
+
+        .search-result-snippet mark {
+            background: rgba(97, 218, 251, 0.3);
+            color: #61dafb;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .search-result-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #6c757d;
+        }
+
+        .search-result-date {
+            margin: 0;
+        }
+
+        .search-result-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .search-result-action {
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 2px;
+        }
+
+        .search-empty-state {
+            text-align: center;
+            padding: 24px 16px;
+            color: #6c757d;
+        }
+
+        .search-empty-state i {
+            font-size: 32px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        .search-loading {
+            text-align: center;
+            padding: 24px 16px;
+            color: #a0a0a0;
+        }
+
+        .search-loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .search-history {
+            max-height: 120px;
+            overflow-y: auto;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .search-history.active {
+            display: block;
+        }
+
+        .search-history-item {
+            padding: 6px 8px;
+            font-size: 12px;
+            color: #a0a0a0;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-history-item:hover {
+            background: #3d3d3d;
+        }
+
+        .search-history-query {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 8px;
+        }
+
+        .search-history-meta {
+            font-size: 10px;
+            color: #6c757d;
+        }
+
+        /* Autocomplete Suggestions */
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-suggestions.active {
+            display: block;
+        }
+
+        .search-suggestion-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #404040;
+        }
+
+        .search-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-suggestion-item:hover {
+            background: #3d3d3d;
+        }
+
+        .search-suggestion-item.selected {
+            background: rgba(97, 218, 251, 0.1);
+        }
+
+        .search-suggestion-type {
+            font-size: 10px;
+            color: #61dafb;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .search-suggestion-text {
+            color: #e4e4e4;
+        }
+
+        .search-suggestion-context {
+            font-size: 10px;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        .search-toggle-filters {
+            font-size: 12px;
+            color: #61dafb;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .search-toggle-filters:hover {
+            background: rgba(97, 218, 251, 0.1);
+        }
+
+        /* Responsive Search */
+        @media (max-width: 768px) {
+            .search-filters {
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                margin: 0;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+
+            .search-result-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .search-result-score {
+                margin-top: 4px;
+                align-self: flex-end;
+            }
+        }
+
         /* Base Input Styles */
         .input {
             /* Typography */
@@ -755,7 +1127,102 @@
             <div class="sidebar-header">
                 <input type="password" id="apiKey" class="input api-key-input" placeholder="Enter API Key">
                 <button id="connectBtn" class="btn">Connect</button>
-                
+
+                <!-- Search Interface -->
+                <div id="searchContainer" class="search-container" style="margin-top: 16px; display: none;">
+                    <div class="search-input-wrapper">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="input search-input"
+                            placeholder="Search notes with AI... (Ctrl+K)"
+                            autocomplete="off"
+                        >
+                        <div class="search-actions">
+                            <button id="searchBtn" class="btn search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button id="searchClearBtn" class="btn search-clear-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <!-- Autocomplete Suggestions -->
+                        <div id="searchSuggestions" class="search-suggestions">
+                            <!-- Suggestions will be populated here -->
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <button id="searchToggleFilters" class="search-toggle-filters">
+                            <i class="fas fa-filter"></i> Filters
+                        </button>
+                        <button id="searchToggleHistory" class="search-toggle-filters" style="font-size: 11px;">
+                            <i class="fas fa-history"></i> History
+                        </button>
+                    </div>
+
+                    <!-- Advanced Search Filters -->
+                    <div id="searchFilters" class="search-filters">
+                        <div class="filter-group">
+                            <label class="filter-label">Results</label>
+                            <div class="filter-controls">
+                                <input
+                                    type="number"
+                                    id="filterTopK"
+                                    class="input filter-input"
+                                    placeholder="10"
+                                    min="1"
+                                    max="50"
+                                    value="10"
+                                >
+                                <span style="font-size: 11px; color: #6c757d;">max results</span>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">Relevance</label>
+                            <div class="filter-controls">
+                                <input
+                                    type="range"
+                                    id="filterMinScore"
+                                    class="filter-input"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value="0"
+                                    style="width: 100px;"
+                                >
+                                <span id="filterMinScoreValue" style="font-size: 11px; color: #6c757d;">0.0+</span>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">Options</label>
+                            <div class="filter-controls">
+                                <label style="font-size: 12px; color: #a0a0a0; display: flex; align-items: center;">
+                                    <input
+                                        type="checkbox"
+                                        id="filterTitleOnly"
+                                        class="filter-checkbox"
+                                    >
+                                    Title only
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Stats -->
+                    <div id="searchStats" class="search-stats">
+                        <span id="searchStatsText">No search performed</span>
+                    </div>
+
+                    <!-- Search History -->
+                    <div id="searchHistory" class="search-history">
+                        <!-- History items will be populated here -->
+                    </div>
+                </div>
+
                 <div class="create-note-form" style="margin-top: 16px;">
                     <input type="text" id="newNoteTitle" class="input create-note-input" placeholder="New note title">
                     <button id="createNoteBtn" class="btn btn-secondary">Create</button>
@@ -763,9 +1230,33 @@
             </div>
 
             <div class="notes-list" id="notesList">
-                <div class="empty-state">
-                    <i class="fas fa-sticky-note"></i>
-                    <p>Enter your API key to load notes</p>
+                <!-- Search Results Container -->
+                <div id="searchResults" class="search-results">
+                    <!-- Loading State -->
+                    <div id="searchLoading" class="search-loading" style="display: none;">
+                        <i class="fas fa-spinner"></i>
+                        <p style="margin: 8px 0 0 0;">Searching...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="searchEmptyState" class="search-empty-state" style="display: none;">
+                        <i class="fas fa-search"></i>
+                        <p style="margin: 8px 0 0 0;">No results found</p>
+                        <p style="font-size: 11px; margin: 4px 0 0 0;">Try different keywords or adjust filters</p>
+                    </div>
+
+                    <!-- Results List -->
+                    <div id="searchResultsList">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Default Notes List -->
+                <div id="defaultNotesList">
+                    <div class="empty-state">
+                        <i class="fas fa-sticky-note"></i>
+                        <p>Enter your API key to load notes</p>
+                    </div>
                 </div>
             </div>
         </div>

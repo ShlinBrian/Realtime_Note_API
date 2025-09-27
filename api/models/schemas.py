@@ -201,13 +201,18 @@ class SearchResult(BaseModel):
     """Individual search result"""
 
     note_id: str = Field(..., description="Unique identifier of the matching note")
-    score: float = Field(
+    similarity_score: float = Field(
         ...,
-        description="Similarity score (0.0 to 1.0, higher is more relevant)",
-        ge=0.0,
+        description="Similarity score (-1.0 to 1.0, higher is more relevant)",
+        ge=-1.0,
         le=1.0,
         example=0.85,
     )
+    title: str = Field(..., description="Title of the matching note")
+    snippet: str = Field(..., description="Content snippet from the matching note")
+    highlighted_content: Optional[str] = Field(None, description="Highlighted content snippet")
+    created_at: Optional[str] = Field(None, description="Creation timestamp")
+    updated_at: Optional[str] = Field(None, description="Last update timestamp")
 
 
 class SearchResponse(BaseModel):

@@ -11,6 +11,7 @@ import type {
   NotificationType,
   AppElements
 } from './types.js';
+import { SearchService } from './search.js';
 
 // Declare global objects
 declare global {
@@ -35,6 +36,7 @@ class RealtimeNotesApp {
   private isConnected: boolean = false;
   private debounceTimer: number | null = null;
   private lastVersion: number = 0;
+  private searchService: SearchService | null = null;
 
   // DOM Elements
   private elements: AppElements;
@@ -63,6 +65,17 @@ class RealtimeNotesApp {
       notesList: getElementById<HTMLDivElement>('notesList'),
       newNoteTitle: getElementById<HTMLInputElement>('newNoteTitle'),
       createNoteBtn: getElementById<HTMLButtonElement>('createNoteBtn'),
+
+      // Search elements
+      searchContainer: getElementById<HTMLDivElement>('searchContainer'),
+      searchInput: getElementById<HTMLInputElement>('searchInput'),
+      searchBtn: getElementById<HTMLButtonElement>('searchBtn'),
+      searchClearBtn: getElementById<HTMLButtonElement>('searchClearBtn'),
+      searchResults: getElementById<HTMLDivElement>('searchResults'),
+      searchFilters: getElementById<HTMLDivElement>('searchFilters'),
+      searchStats: getElementById<HTMLDivElement>('searchStats'),
+      searchHistory: getElementById<HTMLDivElement>('searchHistory'),
+      searchSuggestions: getElementById<HTMLDivElement>('searchSuggestions'),
 
       // Editor elements
       noteTitle: getElementById<HTMLInputElement>('noteTitle'),
@@ -95,6 +108,15 @@ class RealtimeNotesApp {
 
     // Delete note event
     this.elements.deleteNoteBtn.addEventListener('click', () => this.deleteCurrentNote());
+
+    // Search event handlers
+    document.addEventListener('searchResultSelected', (e: any) => {
+      this.openNoteById(e.detail.noteId);
+    });
+
+    document.addEventListener('showNotification', (e: any) => {
+      this.showNotification(e.detail.message, e.detail.type);
+    });
   }
 
   private loadApiKeyFromStorage(): void {
@@ -139,6 +161,15 @@ class RealtimeNotesApp {
       this.elements.connectBtn.disabled = false;
       this.elements.apiKeyInput.disabled = true;
 
+      // Initialize search service
+      try {
+        this.searchService = new SearchService(this.apiBaseUrl, this.apiKey);
+        this.searchService.show();
+      } catch (searchError) {
+        console.error('Search service initialization error:', searchError);
+        // Continue without search - connection is still successful
+      }
+
       this.showNotification('Connected successfully!', 'success');
     } catch (error) {
       console.error('Connection error:', error);
@@ -152,6 +183,14 @@ class RealtimeNotesApp {
   private disconnect(): void {
     this.isConnected = false;
     this.disconnectWebSocket();
+
+    // Clean up search service
+    if (this.searchService) {
+      this.searchService.hide();
+      this.searchService.destroy();
+      this.searchService = null;
+    }
+
     this.updateConnectionStatus('disconnected', 'Disconnected');
     this.elements.connectBtn.textContent = 'Connect';
     this.elements.apiKeyInput.disabled = false;
@@ -182,8 +221,31 @@ class RealtimeNotesApp {
   }
 
   private renderNotesList(): void {
+    // Find the defaultNotesList element - it may not exist if already replaced
+    let defaultNotesList = document.getElementById('defaultNotesList');
+    if (!defaultNotesList) {
+      // If it doesn't exist, we need to work with notesList directly
+      // but preserve search results if they exist
+      const searchResults = document.getElementById('searchResults');
+      if (searchResults) {
+        // Temporarily remove search results to preserve them
+        searchResults.remove();
+      }
+
+      // Clear and add defaultNotesList back
+      this.elements.notesList.innerHTML = '';
+      defaultNotesList = document.createElement('div');
+      defaultNotesList.id = 'defaultNotesList';
+      this.elements.notesList.appendChild(defaultNotesList);
+
+      // Re-add search results if they existed
+      if (searchResults) {
+        this.elements.notesList.insertBefore(searchResults, defaultNotesList);
+      }
+    }
+
     if (this.notes.length === 0) {
-      this.elements.notesList.innerHTML = `
+      defaultNotesList.innerHTML = `
         <div class="empty-state">
           <i class="fas fa-sticky-note"></i>
           <p>No notes yet. Create your first note!</p>
@@ -192,7 +254,7 @@ class RealtimeNotesApp {
       return;
     }
 
-    this.elements.notesList.innerHTML = this.notes.map(note => `
+    defaultNotesList.innerHTML = this.notes.map(note => `
       <div class="card card-interactive note-item" data-note-id="${note.note_id}" onclick="app.selectNote('${note.note_id}')">
         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
         <div class="note-preview">${this.escapeHtml(this.getPreview(note.content_md))}</div>
@@ -212,12 +274,38 @@ class RealtimeNotesApp {
   }
 
   private clearNotesList(): void {
-    this.elements.notesList.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-sticky-note"></i>
-        <p>Enter your API key to load notes</p>
-      </div>
-    `;
+    // Find the defaultNotesList element
+    let defaultNotesList = document.getElementById('defaultNotesList');
+    if (!defaultNotesList) {
+      // If it doesn't exist, clear everything and recreate structure
+      this.elements.notesList.innerHTML = `
+        <div id="searchResults" class="search-results">
+          <div id="searchLoading" class="search-loading" style="display: none;">
+            <i class="fas fa-spinner"></i>
+            <p style="margin: 8px 0 0 0;">Searching...</p>
+          </div>
+          <div id="searchEmptyState" class="search-empty-state" style="display: none;">
+            <i class="fas fa-search"></i>
+            <p style="margin: 8px 0 0 0;">No results found</p>
+            <p style="font-size: 11px; margin: 4px 0 0 0;">Try different keywords or adjust filters</p>
+          </div>
+          <div id="searchResultsList"></div>
+        </div>
+        <div id="defaultNotesList">
+          <div class="empty-state">
+            <i class="fas fa-sticky-note"></i>
+            <p>Enter your API key to load notes</p>
+          </div>
+        </div>
+      `;
+    } else {
+      defaultNotesList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-sticky-note"></i>
+          <p>Enter your API key to load notes</p>
+        </div>
+      `;
+    }
   }
 
   private async createNote(): Promise<void> {
@@ -293,6 +381,13 @@ class RealtimeNotesApp {
       const message = error instanceof Error ? error.message : 'Unknown error';
       this.showNotification(`Failed to load note: ${message}`, 'error');
     }
+  }
+
+  /**
+   * Open note by ID (used by search service)
+   */
+  private async openNoteById(noteId: string): Promise<void> {
+    await this.selectNote(noteId);
   }
 
   private loadNoteIntoEditor(): void {

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from typing import List
 
 from api.db.database import get_async_db
@@ -135,10 +136,31 @@ async def search(
         query=search_request.query, org_id=org_id, top_k=search_request.top_k, db=db
     )
 
-    # Format results
-    search_results = [
-        SearchResult(note_id=note_id, score=score) for note_id, score in results
-    ]
+    # Fetch full note details for the search results
+    search_results = []
+    for note_id, score in results:
+        # Get the note from database
+        note_result = await db.execute(
+            select(Note).where(Note.note_id == note_id, Note.deleted == False)
+        )
+        note = note_result.scalar_one_or_none()
+
+        if note:
+            # Create snippet from content (first 200 characters)
+            snippet = (note.content_md[:200] + "...") if len(note.content_md) > 200 else note.content_md
+            # Remove markdown formatting for snippet
+            import re
+            snippet = re.sub(r'[#*_`\[\]()]+', '', snippet).strip()
+
+            search_results.append(SearchResult(
+                note_id=note_id,
+                similarity_score=score,
+                title=note.title,
+                snippet=snippet,
+                highlighted_content=None,  # TODO: implement highlighting
+                created_at=note.created_at.isoformat() if note.created_at else None,
+                updated_at=note.updated_at.isoformat() if note.updated_at else None
+            ))
 
     return SearchResponse(results=search_results)
 

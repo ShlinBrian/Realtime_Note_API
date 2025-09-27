@@ -432,8 +432,13 @@ async def delete_note(
     db.add(note)
     await db.commit()
 
-    # Remove from search index
-    await remove_note_from_index(note)
+    # Try to remove from search index, but don't fail if it doesn't work
+    try:
+        await remove_note_from_index(note)
+    except Exception as e:
+        # Log the error but don't fail the request since the note is already deleted
+        print(f"Warning: Failed to remove note from search index: {e}")
+        # The note is already deleted from DB, so this is not critical
 
     return {"deleted": True}
 
