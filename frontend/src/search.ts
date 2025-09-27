@@ -543,9 +543,10 @@ export class SearchService {
   private setSearchState(isSearching: boolean): void {
     this.searchState.isSearching = isSearching;
 
-    // Update button states
+    // Update button states (but keep search input enabled for continuous typing)
     this.elements.searchBtn.disabled = isSearching;
-    this.elements.searchInput.disabled = isSearching;
+    // Don't disable the search input - users should be able to continue typing
+    // this.elements.searchInput.disabled = isSearching;
 
     // Show/hide loading
     this.elements.searchLoading.style.display = isSearching ? 'block' : 'none';

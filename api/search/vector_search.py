@@ -63,13 +63,24 @@ class NoteVectorIndex:
                 with open(index_path, "rb") as f:
                     data = pickle.load(f)
                     if FAISS_AVAILABLE:
-                        self.index = data.get("index")
+                        saved_index = data.get("index")
+                        if saved_index is not None:
+                            self.index = saved_index
+                        # If saved index is None but FAISS is now available,
+                        # keep the new FAISS index we created in __init__
                     self.note_ids = data.get("note_ids", [])
                     self.embeddings = data.get("embeddings", [])
                     self.last_updated = data.get("last_updated", datetime.now())
                     logger.info(
                         f"Loaded index for org {self.org_id} with {len(self.note_ids)} notes"
                     )
+
+                    # If FAISS is available but we loaded a None index, rebuild from embeddings
+                    if FAISS_AVAILABLE and saved_index is None and len(self.embeddings) > 0:
+                        logger.info(f"Rebuilding FAISS index from {len(self.embeddings)} stored embeddings")
+                        for i, embedding in enumerate(self.embeddings):
+                            if i < len(self.note_ids):
+                                self.index.add(np.array([embedding]))
             except Exception as e:
                 logger.error(f"Error loading index: {e}")
 

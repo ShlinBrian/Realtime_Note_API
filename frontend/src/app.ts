@@ -335,13 +335,13 @@ class RealtimeNotesApp {
         throw new Error(error.error?.message || 'Failed to create note');
       }
 
-      const note: Note = await response.json();
+      const noteId: string = await response.json();
       this.elements.newNoteTitle.value = '';
       this.showNotification('Note created successfully!', 'success');
 
       // Refresh notes list and select the new note
       await this.fetchNotes();
-      this.selectNote(note.note_id);
+      this.selectNote(noteId);
     } catch (error) {
       console.error('Create note error:', error);
       const message = error instanceof Error ? error.message : 'Unknown error';
