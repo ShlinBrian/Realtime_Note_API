@@ -30,12 +30,34 @@ except ImportError:
     )
     FAISS_AVAILABLE = False
 
+# Try to import sentence transformers for advanced embeddings
+try:
+    from sentence_transformers import SentenceTransformer
+
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+    # Global model instance for reuse
+    _embedding_model: Optional[SentenceTransformer] = None
+    _model_lock = threading.Lock()
+except ImportError:
+    logger.warning(
+        "sentence-transformers not available. Using simple hash-based embeddings."
+    )
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    # Use Any for type hints when SentenceTransformer is not available
+    from typing import Any
+    SentenceTransformer = Any
+    _embedding_model = None
+    _model_lock = threading.Lock()
+
 
 class NoteVectorIndex:
     """Vector index for notes using FAISS if available, otherwise simple search"""
 
-    def __init__(self, org_id: str, dimension: int = 384):
+    def __init__(self, org_id: str, dimension: Optional[int] = None):
         self.org_id = org_id
+        # Get dimension from embedding model or use default
+        if dimension is None:
+            dimension = _get_embedding_dimension()
         self.dimension = dimension
         self.note_ids: List[str] = []
         self.embeddings: List[np.ndarray] = []
@@ -44,7 +66,7 @@ class NoteVectorIndex:
 
         # Create FAISS index if available
         if FAISS_AVAILABLE:
-            self.index = faiss.IndexFlatL2(dimension)  # L2 distance
+            self.index = faiss.IndexFlatL2(self.dimension)  # L2 distance
         else:
             self.index = None
 
@@ -224,18 +246,64 @@ def get_index_for_org(org_id: str) -> NoteVectorIndex:
         return index_registry[org_id]
 
 
+def _get_embedding_model() -> Optional[SentenceTransformer]:
+    """Get or initialize the embedding model (thread-safe)"""
+    global _embedding_model
+
+    if not SENTENCE_TRANSFORMERS_AVAILABLE:
+        return None
+
+    if _embedding_model is None:
+        with _model_lock:
+            if _embedding_model is None:  # Double-check pattern
+                try:
+                    # Use a lightweight, fast model optimized for semantic search
+                    model_name = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+                    logger.info(f"Loading embedding model: {model_name}")
+                    _embedding_model = SentenceTransformer(model_name)
+                    logger.info(f"Embedding model loaded successfully. Dimension: {_embedding_model.get_sentence_embedding_dimension()}")
+                except Exception as e:
+                    logger.error(f"Failed to load embedding model: {e}")
+                    return None
+
+    return _embedding_model
+
+
+def _get_embedding_dimension() -> int:
+    """Get the dimension of embeddings from the model"""
+    model = _get_embedding_model()
+    if model is not None:
+        return model.get_sentence_embedding_dimension()
+    return 384  # Default dimension for hash-based embeddings
+
+
 def text_to_embedding(text: str) -> np.ndarray:
     """
-    Convert text to embedding vector
-    In a real implementation, this would use a model like SentenceTransformers
-    For this example, we'll use a simple hash-based approach
+    Convert text to embedding vector using sentence transformers or hash-based fallback
     """
-    # Simple deterministic embedding generation for demo purposes
-    # In production, use a proper embedding model
+    if SENTENCE_TRANSFORMERS_AVAILABLE:
+        model = _get_embedding_model()
+        if model is not None:
+            try:
+                # Clean and prepare text
+                cleaned_text = text.strip()
+                if not cleaned_text:
+                    cleaned_text = "empty"
+
+                # Generate embedding using sentence transformer
+                embedding = model.encode(cleaned_text, normalize_embeddings=True)
+                return embedding.astype(np.float32)
+
+            except Exception as e:
+                logger.error(f"Error generating embedding with sentence transformer: {e}")
+                # Fall through to hash-based approach
+
+    # Fallback to hash-based embedding (original implementation)
+    logger.debug("Using hash-based embedding fallback")
     hash_value = abs(hash(text)) % (2**32 - 1)  # Ensure positive value within range
     rng = np.random.RandomState(hash_value)
     embedding = rng.randn(384)  # 384-dimensional embedding
-    return embedding / np.linalg.norm(embedding)  # Normalize
+    return (embedding / np.linalg.norm(embedding)).astype(np.float32)  # Normalize
 
 
 async def index_note(note: Note) -> None:
