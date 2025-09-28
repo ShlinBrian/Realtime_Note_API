@@ -77,6 +77,7 @@ class TestNotesRouterFunctions:
 
     @patch('api.routers.notes.index_note')
     @patch('api.utils.organization.get_or_create_default_organization')
+    @pytest.mark.asyncio
     async def test_note_creation_logic(self, mock_get_org, mock_index, sample_note_data, mock_db_session):
         """Test note creation business logic"""
         # Setup mocks
