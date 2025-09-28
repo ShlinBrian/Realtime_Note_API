@@ -80,6 +80,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
 *.cover
 *.py,cover
 .hypothesis/
@@ -130,9 +131,11 @@ dmypy.json
 indices/
 *.pkl
 
-# Local development
-run_local.sh
+# Debug and development scripts
+debug_*.py
+screenshot/
 
 # AI tools
 CLAUDE.md
 .claude/
+.cursor/
