@@ -281,8 +281,23 @@ make install
 # Generate gRPC code from proto files
 make generate-grpc
 
-# Run tests
+# Run tests (comprehensive test suite with 80% coverage)
 make test
+
+# Run unit tests only
+make test-unit
+
+# Run integration tests only
+make test-integration
+
+# Generate detailed HTML coverage report
+make test-coverage
+
+# Quick test run for development
+make test-quick
+
+# Verbose test output for debugging
+make test-verbose
 
 # Clean up temporary files and volumes
 make clean

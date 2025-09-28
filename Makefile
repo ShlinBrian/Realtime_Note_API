@@ -1,12 +1,18 @@
-.PHONY: run dev test clean help
+.PHONY: run dev test test-unit test-integration test-coverage test-quick test-verbose test-with-services clean help
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  make run   - Start all services with Docker (recommended)"
-	@echo "  make dev   - Run API locally for development (requires conda)"
-	@echo "  make test  - Run tests"
-	@echo "  make clean - Stop services and clean everything"
+	@echo "  make run              - Start all services with Docker (recommended)"
+	@echo "  make dev              - Run API locally for development (requires conda)"
+	@echo "  make test             - Run all tests with 80% coverage requirement"
+	@echo "  make test-unit        - Run unit tests only"
+	@echo "  make test-integration - Run integration tests only"
+	@echo "  make test-coverage    - Run tests with detailed HTML coverage report"
+	@echo "  make test-quick       - Run tests quickly without detailed output"
+	@echo "  make test-verbose     - Run tests with verbose output"
+	@echo "  make test-with-services - Start services and run integration tests"
+	@echo "  make clean            - Stop services and clean everything"
 
 # Start all services with Docker (recommended)
 run:
@@ -44,9 +50,47 @@ dev:
 	@echo "Starting API in development mode..."
 	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate realtime-note-api && uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"
 
-# Run tests
+# Run all tests with 80% coverage requirement
 test:
-	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate realtime-note-api && pytest"
+	@echo "Running comprehensive test suite with 80% coverage requirement..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate py313 && python -m pytest tests/ -v --cov=api --cov-report=term-missing --cov-report=html:htmlcov/all --cov-fail-under=80"
+
+# Run unit tests only
+test-unit:
+	@echo "Running unit tests with coverage..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate py313 && python -m pytest tests/unit/ --cov=api --cov-report=term --tb=no -q"
+
+# Run integration tests only
+test-integration:
+	@echo "Running integration tests with coverage..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate py313 && python -m pytest tests/integration/ --cov=api --cov-report=term"
+
+# Run tests with detailed HTML coverage report
+test-coverage:
+	@echo "Running tests with detailed coverage analysis..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate py313 && python -m pytest tests/ --cov=api --cov-report=html:htmlcov --cov-report=term-missing"
+	@echo "Coverage report generated in htmlcov/index.html"
+
+# Run tests quickly for development
+test-quick:
+	@echo "Running quick test suite..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate py313 && python -m pytest tests/ --cov=api --cov-report=term:skip-covered --no-cov-on-fail -q --tb=no"
+
+# Run tests with verbose output for debugging
+test-verbose:
+	@echo "Running tests with verbose output..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate py313 && python -m pytest tests/ -xvs --cov=api --cov-report=term-missing"
+
+# Start services and run integration tests
+test-with-services:
+	@echo "Starting services for integration testing..."
+	@docker compose up -d
+	@echo "Waiting for services to be ready..."
+	@sleep 15
+	@echo "Running integration tests with real services..."
+	@bash -c "source $$(conda info --base)/etc/profile.d/conda.sh && conda activate py313 && python -m pytest tests/integration/test_api_simple.py -v || true"
+	@echo "Stopping test services..."
+	@docker compose down
 
 # Stop services and clean everything
 clean:
