@@ -82,7 +82,12 @@ class RealtimeNotesApp {
       markdownEditor: getElementById<HTMLTextAreaElement>('markdownEditor'),
       markdownPreview: getElementById<HTMLDivElement>('markdownPreview'),
       noteVersion: getElementById<HTMLSpanElement>('noteVersion'),
-      deleteNoteBtn: getElementById<HTMLButtonElement>('deleteNoteBtn')
+      deleteNoteBtn: getElementById<HTMLButtonElement>('deleteNoteBtn'),
+
+      // Layout elements
+      resizer: document.getElementById('resizer') as HTMLDivElement | null,
+      editorPane: document.getElementById('editorPane') as HTMLDivElement | null,
+      editorContent: document.querySelector('.editor-content') as HTMLDivElement | null
     };
   }
 
@@ -100,9 +105,13 @@ class RealtimeNotesApp {
     });
 
     // Editor events
-    this.elements.noteTitle.addEventListener('input', () => this.debouncedSave());
+    this.elements.noteTitle.addEventListener('input', () => {
+      this.updateSidebarItem();
+      this.debouncedSave();
+    });
     this.elements.markdownEditor.addEventListener('input', () => {
       this.updatePreview();
+      this.updateSidebarItem();
       this.debouncedSave();
     });
 
@@ -116,6 +125,48 @@ class RealtimeNotesApp {
 
     document.addEventListener('showNotification', (e: any) => {
       this.showNotification(e.detail.message, e.detail.type);
+    });
+
+    // Resizer event
+    this.initResizer();
+  }
+
+  private initResizer(): void {
+    if (!this.elements.resizer || !this.elements.editorPane || !this.elements.editorContent) return;
+    
+    let isResizing = false;
+    let startX: number, startWidth: number;
+    
+    this.elements.resizer.addEventListener('mousedown', (e: MouseEvent) => {
+      isResizing = true;
+      this.elements.resizer!.classList.add('resizing');
+      startX = e.clientX;
+      startWidth = this.elements.editorPane!.getBoundingClientRect().width;
+      
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+    });
+
+    document.addEventListener('mousemove', (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const dx = e.clientX - startX;
+      const newWidth = startWidth + dx;
+      const containerWidth = this.elements.editorContent!.getBoundingClientRect().width;
+      const flexBasis = (newWidth / containerWidth) * 100;
+      
+      if (flexBasis > 10 && flexBasis < 90) {
+        this.elements.editorPane!.style.flex = `0 0 ${flexBasis}%`;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        this.elements.resizer!.classList.remove('resizing');
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      }
     });
   }
 
@@ -271,6 +322,31 @@ class RealtimeNotesApp {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  private updateSidebarItem(): void {
+    if (!this.currentNote) return;
+
+    // Update the local notes array
+    const note = this.notes.find(n => n.note_id === this.currentNote!.note_id);
+    if (note) {
+      note.title = this.elements.noteTitle.value;
+      note.content_md = this.elements.markdownEditor.value;
+    }
+
+    // Update the DOM element directly without full re-render
+    const listItem = document.querySelector(`.note-item[data-note-id="${this.currentNote.note_id}"]`);
+    if (listItem) {
+      const titleEl = listItem.querySelector('.note-title');
+      const previewEl = listItem.querySelector('.note-preview');
+
+      if (titleEl) {
+        titleEl.innerHTML = this.escapeHtml(this.elements.noteTitle.value || 'Untitled');
+      }
+      if (previewEl) {
+        previewEl.innerHTML = this.escapeHtml(this.getPreview(this.elements.markdownEditor.value));
+      }
+    }
   }
 
   private clearNotesList(): void {
@@ -515,6 +591,7 @@ class RealtimeNotesApp {
         this.elements.noteVersion.textContent = updateMsg.data.version.toString();
         this.lastVersion = updateMsg.data.version;
         this.updatePreview();
+        this.updateSidebarItem();
         break;
       }
 

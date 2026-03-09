@@ -153,4 +153,9 @@ export interface AppElements {
   markdownPreview: HTMLDivElement;
   noteVersion: HTMLSpanElement;
   deleteNoteBtn: HTMLButtonElement;
+
+  // Layout elements
+  resizer: HTMLDivElement | null;
+  editorPane: HTMLDivElement | null;
+  editorContent: HTMLDivElement | null;
 }
